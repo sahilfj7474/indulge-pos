@@ -30,7 +30,7 @@ export default function VariantSelectModal({ product, variants, onSelect, onClos
             <button
               key={v.id}
               onClick={() => onSelect(v)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-indigo-900/40 border border-blue-200 hover:border-blue-600 rounded-lg transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-400 rounded-lg transition-colors text-left"
             >
               <span className="text-sm font-medium text-slate-900">{v.name}</span>
               <span className="text-sm text-blue-500 font-semibold">

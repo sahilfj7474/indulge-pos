@@ -150,7 +150,7 @@ export default function SuppliersPage() {
                 className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="sup_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+              <input type="checkbox" id="sup_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-blue-600" />
               <label htmlFor="sup_active" className="text-sm text-slate-600">Active</label>
             </div>
             <div className="flex gap-3 pt-2">

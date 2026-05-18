@@ -292,7 +292,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
         <div className="border-t border-blue-200 pt-4">
           <div className="flex items-center gap-3 mb-2">
             <input type="checkbox" id="has_variants" checked={hasVariants}
-              onChange={e => setHasVariants(e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+              onChange={e => setHasVariants(e.target.checked)} className="w-4 h-4 accent-blue-600" />
             <label htmlFor="has_variants" className="text-sm text-slate-600 flex items-center gap-1.5">
               <Package2 size={14} /> This product has variants (e.g. sizes, colours)
             </label>
@@ -352,7 +352,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
         </div>
 
         <div className="flex items-center gap-3">
-          <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+          <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-blue-600" />
           <label htmlFor="is_active" className="text-sm text-slate-600">Active (visible on POS)</label>
         </div>
 

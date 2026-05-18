@@ -44,7 +44,7 @@ export default function LocationsPage() {
           <div key={loc.id} className={cn('bg-white border rounded-xl p-4', loc.is_active ? 'border-blue-100' : 'border-blue-100 opacity-60')}>
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
-                <div className={cn('p-2 rounded-lg mt-0.5', loc.is_active ? 'bg-indigo-900/40' : 'bg-blue-50')}>
+                <div className={cn('p-2 rounded-lg mt-0.5', loc.is_active ? 'bg-blue-100' : 'bg-blue-50')}>
                   <MapPin size={16} className={loc.is_active ? 'text-blue-500' : 'text-slate-400'} />
                 </div>
                 <div>

@@ -36,7 +36,7 @@ export default function CustomerSearch({ selected, onSelect }: Props) {
 
   if (selected) {
     return (
-      <div className="flex items-center justify-between bg-indigo-900/40 border border-blue-700 rounded-lg px-3 py-2">
+      <div className="flex items-center justify-between bg-blue-100 border border-blue-700 rounded-lg px-3 py-2">
         <div className="flex items-center gap-2">
           <UserCircle size={16} className="text-blue-500" />
           <div>

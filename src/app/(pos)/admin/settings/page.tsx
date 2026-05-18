@@ -104,7 +104,7 @@ export default function SettingsPage() {
                       id={def.key}
                       checked={settings[def.key] === 'true'}
                       onChange={e => set(def.key, e.target.checked ? 'true' : 'false')}
-                      className="w-4 h-4 accent-indigo-600"
+                      className="w-4 h-4 accent-blue-600"
                     />
                     <label htmlFor={def.key} className="text-sm text-slate-500">
                       {settings[def.key] === 'true' ? 'Yes — tax is included in product prices' : 'No — tax is added on top of price'}

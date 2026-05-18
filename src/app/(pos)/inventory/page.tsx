@@ -191,7 +191,7 @@ export default function InventoryPage() {
                           <button
                             onClick={() => setSettingStock(item)}
                             title="Set stock level"
-                            className="px-2.5 py-1 bg-blue-50 hover:bg-indigo-900/50 hover:text-blue-400 text-slate-600 text-xs font-medium rounded-lg transition-colors"
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 hover:text-blue-400 text-slate-600 text-xs font-medium rounded-lg transition-colors"
                           >
                             Set
                           </button>

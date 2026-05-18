@@ -266,7 +266,7 @@ export default function PromotionsPage() {
 
             <div className="flex items-center gap-3">
               <input type="checkbox" id="promo_active" checked={form.is_active}
-                onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+                onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-blue-600" />
               <label htmlFor="promo_active" className="text-sm text-slate-600">Active</label>
             </div>
 
