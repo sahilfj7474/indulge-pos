@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { CartItem, Category, Customer, PaymentMethod, Product, Sale } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getCategories, getActiveProducts, getProductByBarcode, searchProducts } from '@/lib/services/products.service'
-import { completeSale } from '@/lib/services/pos.service'
+import { completeSale, SplitPayment } from '@/lib/services/pos.service'
+import { getHeldOrders, saveHeldOrder, HeldOrderRecord } from '@/lib/services/held-orders.service'
 import { calculateLoyaltyPoints } from '@/lib/utils'
 import BarcodeInput from '@/components/pos/BarcodeInput'
 import CategoryFilter from '@/components/pos/CategoryFilter'
@@ -12,12 +13,13 @@ import ProductGrid from '@/components/pos/ProductGrid'
 import Cart, { computeTotals } from '@/components/pos/Cart'
 import PaymentModal from '@/components/pos/PaymentModal'
 import Receipt from '@/components/pos/Receipt'
+import HeldOrdersModal from '@/components/pos/HeldOrdersModal'
+import { PauseCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function POSPage() {
   const { user } = useAuth()
 
-  // Products
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -26,19 +28,20 @@ export default function POSPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
 
-  // Cart
+  // Cart state
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [discountValue, setDiscountValue] = useState(0)
   const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0)
+  const [surchargeAmount, setSurchargeAmount] = useState(0)
 
-  // Flow
+  // Flow state
   const [showPayment, setShowPayment] = useState(false)
+  const [showHeldOrders, setShowHeldOrders] = useState(false)
+  const [heldOrders, setHeldOrders] = useState<HeldOrderRecord[]>([])
   const [completedSale, setCompletedSale] = useState<{
-    sale: Sale
-    amountTendered: number
-    pointsEarned: number
+    sale: Sale; amountTendered: number; pointsEarned: number; splits?: SplitPayment[]
   } | null>(null)
 
   useEffect(() => {
@@ -48,7 +51,14 @@ export default function POSPage() {
       setProducts(prods)
       setLoadingProducts(false)
     })
+    loadHeldOrders()
   }, [user?.location_id])
+
+  async function loadHeldOrders() {
+    if (!user?.location_id) return
+    const orders = await getHeldOrders(user.location_id)
+    setHeldOrders(orders)
+  }
 
   // Search debounce
   useEffect(() => {
@@ -75,18 +85,16 @@ export default function POSPage() {
         updated[existing] = { ...updated[existing], quantity: updated[existing].quantity + 1 }
         return updated
       }
-      return [...prev, { product, quantity: 1, unit_price: product.price, discount_amount: 0 }]
+      return [...prev, { product, quantity: 1, unit_price: product.price, discount_amount: 0, note: '' }]
     })
   }
 
   async function handleBarcodeScan(barcode: string) {
-    // Check if it matches search query first
     const product = await getProductByBarcode(barcode)
     if (product) {
       addToCart(product)
       toast.success(`Added: ${product.name}`, { duration: 1500 })
     } else {
-      // Fall back to search
       setSearchQuery(barcode)
       toast.error('Product not found for this barcode')
     }
@@ -98,19 +106,16 @@ export default function POSPage() {
   }
 
   function updateQty(index: number, qty: number) {
-    if (qty <= 0) {
-      removeItem(index)
-      return
-    }
-    setCartItems(prev => {
-      const updated = [...prev]
-      updated[index] = { ...updated[index], quantity: qty }
-      return updated
-    })
+    if (qty <= 0) { removeItem(index); return }
+    setCartItems(prev => { const u = [...prev]; u[index] = { ...u[index], quantity: qty }; return u })
   }
 
   function removeItem(index: number) {
     setCartItems(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateNote(index: number, note: string) {
+    setCartItems(prev => { const u = [...prev]; u[index] = { ...u[index], note }; return u })
   }
 
   function clearCart() {
@@ -118,16 +123,49 @@ export default function POSPage() {
     setCustomer(null)
     setDiscountValue(0)
     setLoyaltyPointsToRedeem(0)
+    setSurchargeAmount(0)
+  }
+
+  async function handleHold() {
+    if (cartItems.length === 0) return
+    const label = prompt('Label for this held order:', 'Table 1') ?? ''
+    if (!label.trim()) return
+    try {
+      await saveHeldOrder(user!.location_id!, user!.id, label.trim(), {
+        items: cartItems,
+        customer,
+        discountType,
+        discountValue,
+        loyaltyPointsToRedeem,
+        surchargeAmount,
+      })
+      clearCart()
+      toast.success(`Order held: ${label}`)
+      loadHeldOrders()
+    } catch {
+      toast.error('Failed to hold order')
+    }
+  }
+
+  function handleResume(order: HeldOrderRecord) {
+    const d = order.data
+    setCartItems(d.items)
+    setCustomer(d.customer)
+    setDiscountType(d.discountType)
+    setDiscountValue(d.discountValue)
+    setLoyaltyPointsToRedeem(d.loyaltyPointsToRedeem)
+    setSurchargeAmount(d.surchargeAmount ?? 0)
+    setHeldOrders(prev => prev.filter(o => o.id !== order.id))
+    toast.success(`Resumed: ${order.label}`)
   }
 
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
-    cartItems, discountType, discountValue, loyaltyPointsToRedeem
+    cartItems, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount
   )
 
-  async function handleCompleteSale(method: PaymentMethod, amountTendered: number) {
+  async function handleCompleteSale(method: PaymentMethod, amountTendered: number, splits?: SplitPayment[]) {
     if (!user) return
     setShowPayment(false)
-
     try {
       const sale = await completeSale({
         locationId: user.location_id!,
@@ -137,14 +175,15 @@ export default function POSPage() {
         subtotal,
         discountAmount: discountAmount + loyaltyDiscount,
         taxAmount,
+        surchargeAmount,
         total,
         paymentMethod: method,
+        splitPayments: splits,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         notes: '',
       })
-
       const pointsEarned = customer ? calculateLoyaltyPoints(total) : 0
-      setCompletedSale({ sale, amountTendered, pointsEarned })
+      setCompletedSale({ sale, amountTendered, pointsEarned, splits })
     } catch (err) {
       toast.error('Failed to complete sale. Please try again.')
       console.error(err)
@@ -171,28 +210,35 @@ export default function POSPage() {
     <div className="flex h-full gap-0 -m-6">
       {/* Left: Products */}
       <div className="flex-1 flex flex-col min-w-0 p-4 overflow-hidden">
-        {/* Search/Barcode */}
-        <BarcodeInput
-          value={barcodeInput}
-          onChange={handleBarcodeChange}
-          onScan={handleBarcodeScan}
-        />
+        {/* Search/Barcode + Held Orders button */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <BarcodeInput
+              value={barcodeInput}
+              onChange={handleBarcodeChange}
+              onScan={handleBarcodeScan}
+            />
+          </div>
+          {heldOrders.length > 0 && (
+            <button
+              onClick={() => setShowHeldOrders(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/50 text-amber-400 text-xs font-medium rounded-lg transition-colors"
+            >
+              <PauseCircle size={14} />
+              {heldOrders.length} Held
+            </button>
+          )}
+        </div>
 
         {/* Category filter */}
         <div className="mt-3 mb-3">
-          <CategoryFilter
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
+          <CategoryFilter categories={categories} selected={selectedCategory} onSelect={setSelectedCategory} />
         </div>
 
         {/* Product grid */}
         <div className="flex-1 overflow-y-auto">
           {loadingProducts ? (
-            <div className="flex items-center justify-center h-48 text-gray-500 text-sm">
-              Loading products...
-            </div>
+            <div className="flex items-center justify-center h-48 text-gray-500 text-sm">Loading products...</div>
           ) : (
             <ProductGrid products={displayProducts} onAdd={addToCart} />
           )}
@@ -207,18 +253,22 @@ export default function POSPage() {
           discountType={discountType}
           discountValue={discountValue}
           loyaltyPointsToRedeem={loyaltyPointsToRedeem}
+          surchargeAmount={surchargeAmount}
           onCustomerChange={c => { setCustomer(c); setLoyaltyPointsToRedeem(0) }}
           onQtyChange={updateQty}
           onRemove={removeItem}
+          onNoteChange={updateNote}
           onDiscountTypeChange={setDiscountType}
           onDiscountValueChange={setDiscountValue}
           onLoyaltyRedeemChange={setLoyaltyPointsToRedeem}
+          onSurchargeChange={setSurchargeAmount}
           onCharge={() => setShowPayment(true)}
           onClear={clearCart}
+          onHold={handleHold}
         />
       </div>
 
-      {/* Payment modal */}
+      {/* Modals */}
       {showPayment && (
         <PaymentModal
           total={total}
@@ -228,7 +278,15 @@ export default function POSPage() {
         />
       )}
 
-      {/* Receipt modal */}
+      {showHeldOrders && (
+        <HeldOrdersModal
+          orders={heldOrders}
+          onResume={handleResume}
+          onDeleted={id => setHeldOrders(prev => prev.filter(o => o.id !== id))}
+          onClose={() => setShowHeldOrders(false)}
+        />
+      )}
+
       {completedSale && user.location && (
         <Receipt
           sale={completedSale.sale}
@@ -239,6 +297,7 @@ export default function POSPage() {
           amountTendered={completedSale.amountTendered}
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}
           loyaltyPointsEarned={completedSale.pointsEarned}
+          splitPayments={completedSale.splits}
           onClose={handleReceiptClose}
         />
       )}

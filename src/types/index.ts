@@ -36,6 +36,7 @@ export interface Product {
   category?: Category
   price: number
   cost: number | null
+  image_url: string | null
   is_active: boolean
   created_at: string
 }
@@ -143,6 +144,149 @@ export interface CartItem {
   quantity: number
   unit_price: number
   discount_amount: number
+  note: string
+}
+
+export interface HeldOrder {
+  id: string
+  label: string
+  items: CartItem[]
+  customer: Customer | null
+  discountType: 'percentage' | 'fixed'
+  discountValue: number
+  loyaltyPointsToRedeem: number
+  heldAt: string
+}
+
+export interface Supplier {
+  id: string
+  name: string
+  contact_name: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  notes: string | null
+  is_active: boolean
+  created_at: string
+}
+
+export interface PurchaseOrder {
+  id: string
+  supplier_id: string
+  supplier?: Supplier
+  location_id: string
+  location?: Location
+  user_id: string
+  user?: User
+  status: 'draft' | 'ordered' | 'received' | 'cancelled'
+  notes: string | null
+  total: number
+  created_at: string
+  items?: PurchaseOrderItem[]
+}
+
+export interface PurchaseOrderItem {
+  id: string
+  purchase_order_id: string
+  product_id: string
+  product?: Product
+  quantity_ordered: number
+  quantity_received: number
+  unit_cost: number
+  total: number
+}
+
+export interface StockTake {
+  id: string
+  location_id: string
+  location?: Location
+  user_id: string
+  user?: User
+  status: 'in_progress' | 'completed'
+  notes: string | null
+  created_at: string
+  completed_at: string | null
+  items?: StockTakeItem[]
+}
+
+export interface StockTakeItem {
+  id: string
+  stock_take_id: string
+  product_id: string
+  product?: Product
+  expected_qty: number
+  counted_qty: number
+  variance: number
+}
+
+export interface StockTransfer {
+  id: string
+  from_location_id: string
+  to_location_id: string
+  from_location?: Location
+  to_location?: Location
+  user_id: string
+  user?: User
+  status: 'pending' | 'completed' | 'cancelled'
+  notes: string | null
+  created_at: string
+  items?: StockTransferItem[]
+}
+
+export interface StockTransferItem {
+  id: string
+  stock_transfer_id: string
+  product_id: string
+  product?: Product
+  quantity: number
+}
+
+export interface Register {
+  id: string
+  location_id: string
+  user_id: string
+  user?: User
+  opening_float: number
+  closing_float: number | null
+  cash_in: number
+  cash_out: number
+  status: 'open' | 'closed'
+  opened_at: string
+  closed_at: string | null
+}
+
+export interface Layby {
+  id: string
+  location_id: string
+  user_id: string
+  customer_id: string
+  customer?: Customer
+  total: number
+  deposit_paid: number
+  balance_due: number
+  status: 'active' | 'completed' | 'cancelled'
+  notes: string | null
+  created_at: string
+  items?: LaybyItem[]
+  payments?: LaybyPayment[]
+}
+
+export interface LaybyItem {
+  id: string
+  layby_id: string
+  product_id: string
+  product?: Product
+  quantity: number
+  unit_price: number
+  total: number
+}
+
+export interface LaybyPayment {
+  id: string
+  layby_id: string
+  amount: number
+  payment_method: PaymentMethod
+  created_at: string
 }
 
 export interface ZReport {

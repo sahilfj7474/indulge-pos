@@ -1,21 +1,25 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { Sale } from '@/types'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { voidSale } from '@/lib/services/sales.service'
 import Modal from '@/components/ui/Modal'
-import { Printer, Ban } from 'lucide-react'
+import RefundModal from './RefundModal'
+import { Printer, Ban, RotateCcw } from 'lucide-react'
 import { TAX_RATE } from '@/components/pos/Cart'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 interface Props {
   sale: Sale
+  userId: string
   canVoid: boolean
+  canRefund: boolean
   onClose: () => void
   onVoided: () => void
+  onRefunded: () => void
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -25,9 +29,13 @@ const STATUS_STYLES: Record<string, string> = {
   partial_refund: 'bg-orange-900/50 text-orange-400',
 }
 
-export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Props) {
+export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onClose, onVoided, onRefunded }: Props) {
   const receiptRef = useRef<HTMLDivElement>(null)
   const handlePrint = useReactToPrint({ contentRef: receiptRef })
+  const [showRefund, setShowRefund] = useState(false)
+
+  const surcharge = (sale as any).surcharge_amount ?? 0
+  const paymentDetails = (sale as any).payment_details
 
   async function handleVoid() {
     if (!confirm('Void this sale? This cannot be undone.')) return
@@ -39,6 +47,17 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
     } catch {
       toast.error('Failed to void sale')
     }
+  }
+
+  if (showRefund) {
+    return (
+      <RefundModal
+        sale={sale}
+        userId={userId}
+        onClose={() => setShowRefund(false)}
+        onRefunded={() => { onRefunded(); setShowRefund(false) }}
+      />
+    )
   }
 
   return (
@@ -53,7 +72,7 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
           <div>
             <p className="text-gray-500">Status</p>
             <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[sale.status] ?? '')}>
-              {sale.status}
+              {sale.status.replace('_', ' ')}
             </span>
           </div>
           <div>
@@ -66,7 +85,17 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
           </div>
           <div>
             <p className="text-gray-500">Payment</p>
-            <p className="text-white capitalize">{sale.payment_method.replace('_', ' ')}</p>
+            {paymentDetails?.splits ? (
+              <div className="space-y-0.5">
+                {paymentDetails.splits.map((sp: { method: string; amount: number }, i: number) => (
+                  <p key={i} className="text-white capitalize text-xs">
+                    {sp.method.replace('_', ' ')}: {formatCurrency(sp.amount)}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-white capitalize">{sale.payment_method.replace('_', ' ')}</p>
+            )}
           </div>
           <div>
             <p className="text-gray-500">Location</p>
@@ -88,7 +117,10 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
             <tbody>
               {(sale.items ?? []).map(item => (
                 <tr key={item.id} className="border-b border-gray-700/50">
-                  <td className="px-3 py-2 text-white">{(item.product as unknown as { name: string })?.name}</td>
+                  <td className="px-3 py-2">
+                    <p className="text-white">{(item.product as unknown as { name: string })?.name}</p>
+                    {(item as any).note && <p className="text-xs text-gray-500 italic">* {(item as any).note}</p>}
+                  </td>
                   <td className="px-3 py-2 text-right text-gray-400">{item.quantity}</td>
                   <td className="px-3 py-2 text-right text-gray-400">{formatCurrency(item.unit_price)}</td>
                   <td className="px-3 py-2 text-right text-white">{formatCurrency(item.total)}</td>
@@ -112,19 +144,32 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
             <span>Tax ({(TAX_RATE * 100).toFixed(0)}% GST)</span>
             <span>{formatCurrency(sale.tax_amount)}</span>
           </div>
+          {surcharge > 0 && (
+            <div className="flex justify-between text-yellow-400">
+              <span>Surcharge</span><span>+{formatCurrency(surcharge)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-white border-t border-gray-700 pt-1.5">
             <span>Total</span><span className="text-indigo-400">{formatCurrency(sale.total)}</span>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2 pt-1 flex-wrap">
           <button
             onClick={() => handlePrint()}
             className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
           >
             <Printer size={14} /> Reprint
           </button>
+          {canRefund && (sale.status === 'completed' || sale.status === 'partial_refund') && (
+            <button
+              onClick={() => setShowRefund(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-900/40 hover:bg-yellow-900/70 text-yellow-400 text-sm font-medium rounded-lg transition-colors"
+            >
+              <RotateCcw size={14} /> Refund Items
+            </button>
+          )}
           {canVoid && sale.status === 'completed' && (
             <button
               onClick={handleVoid}
@@ -159,6 +204,7 @@ export default function SaleDetailModal({ sale, canVoid, onClose, onVoided }: Pr
           <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(sale.subtotal)}</span></div>
           {sale.discount_amount > 0 && <div className="flex justify-between"><span>Discount</span><span>-{formatCurrency(sale.discount_amount)}</span></div>}
           <div className="flex justify-between"><span>Tax (9% GST)</span><span>{formatCurrency(sale.tax_amount)}</span></div>
+          {surcharge > 0 && <div className="flex justify-between"><span>Surcharge</span><span>+{formatCurrency(surcharge)}</span></div>}
           <div className="flex justify-between font-bold"><span>TOTAL</span><span>{formatCurrency(sale.total)}</span></div>
           <p>{'='.repeat(36)}</p>
           <p className="text-center">Thank you!</p>

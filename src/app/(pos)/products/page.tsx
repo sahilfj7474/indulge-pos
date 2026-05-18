@@ -6,7 +6,8 @@ import { getAllProducts, getCategories, deleteProduct } from '@/lib/services/adm
 import { formatCurrency } from '@/lib/utils'
 import ProductModal from '@/components/products/ProductModal'
 import CategoryModal from '@/components/products/CategoryModal'
-import { Plus, Pencil, Trash2, Search, Tag } from 'lucide-react'
+import BarcodeLabelModal from '@/components/products/BarcodeLabelModal'
+import { Plus, Pencil, Trash2, Search, Tag, Barcode } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -22,6 +23,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [labelProduct, setLabelProduct] = useState<Product | null>(null)
   const [tab, setTab] = useState<'products' | 'categories'>('products')
 
   async function load() {
@@ -180,6 +182,12 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <button title="Print barcode label"
+                          onClick={() => setLabelProduct(product)}
+                          className="p-1.5 text-gray-400 hover:text-indigo-400 hover:bg-gray-700 rounded transition-colors"
+                        >
+                          <Barcode size={13} />
+                        </button>
                         <button
                           onClick={() => { setEditingProduct(product); setShowProductModal(true) }}
                           className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
@@ -243,6 +251,10 @@ export default function ProductsPage() {
           onClose={() => setShowCategoryModal(false)}
           onSaved={load}
         />
+      )}
+
+      {labelProduct && (
+        <BarcodeLabelModal product={labelProduct} onClose={() => setLabelProduct(null)} />
       )}
     </div>
   )

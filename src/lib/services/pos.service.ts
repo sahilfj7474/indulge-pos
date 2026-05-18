@@ -2,6 +2,11 @@ import { createClient } from '@/lib/supabase/client'
 import { CartItem, PaymentMethod, Sale } from '@/types'
 import { calculateLoyaltyPoints } from '@/lib/utils'
 
+export interface SplitPayment {
+  method: Exclude<PaymentMethod, 'split'>
+  amount: number
+}
+
 export interface CompleteSaleParams {
   locationId: string
   userId: string
@@ -10,14 +15,20 @@ export interface CompleteSaleParams {
   subtotal: number
   discountAmount: number
   taxAmount: number
+  surchargeAmount: number
   total: number
   paymentMethod: PaymentMethod
+  splitPayments?: SplitPayment[]
   loyaltyPointsRedeemed: number
   notes: string
 }
 
 export async function completeSale(params: CompleteSaleParams): Promise<Sale> {
   const supabase = createClient()
+
+  const paymentDetails = params.splitPayments && params.splitPayments.length > 0
+    ? { splits: params.splitPayments }
+    : null
 
   const { data: sale, error: saleError } = await supabase
     .from('sales')
@@ -28,8 +39,10 @@ export async function completeSale(params: CompleteSaleParams): Promise<Sale> {
       subtotal: params.subtotal,
       discount_amount: params.discountAmount,
       tax_amount: params.taxAmount,
+      surcharge_amount: params.surchargeAmount,
       total: params.total,
       payment_method: params.paymentMethod,
+      payment_details: paymentDetails,
       notes: params.notes || null,
       status: 'completed',
     })
@@ -44,19 +57,15 @@ export async function completeSale(params: CompleteSaleParams): Promise<Sale> {
     quantity: item.quantity,
     unit_price: item.unit_price,
     discount_amount: item.discount_amount,
-    total: (item.unit_price * item.quantity) - item.discount_amount,
+    note: item.note || null,
+    total: item.unit_price * item.quantity - item.discount_amount,
   }))
 
   const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
   if (itemsError) throw new Error(itemsError.message)
 
   if (params.customerId) {
-    await updateCustomerLoyalty(
-      params.customerId,
-      sale.id,
-      params.total,
-      params.loyaltyPointsRedeemed
-    )
+    await updateCustomerLoyalty(params.customerId, sale.id, params.total, params.loyaltyPointsRedeemed)
   }
 
   return sale as Sale
@@ -69,22 +78,16 @@ async function updateCustomerLoyalty(
   pointsRedeemed: number
 ) {
   const supabase = createClient()
-
   const { data: customer } = await supabase
     .from('customers')
     .select('loyalty_points')
     .eq('id', customerId)
     .single()
-
   if (!customer) return
 
   const pointsEarned = calculateLoyaltyPoints(saleTotal)
-  const newBalance = Math.max(0, customer.loyalty_points + pointsEarned - pointsRedeemed)
-
-  await supabase
-    .from('customers')
-    .update({ loyalty_points: newBalance })
-    .eq('id', customerId)
+  const newBalance = Math.max(0, (customer as any).loyalty_points + pointsEarned - pointsRedeemed)
+  await supabase.from('customers').update({ loyalty_points: newBalance }).eq('id', customerId)
 
   if (pointsEarned > 0) {
     await supabase.from('loyalty_transactions').insert({
@@ -95,7 +98,6 @@ async function updateCustomerLoyalty(
       note: `Sale ${saleId.slice(0, 8).toUpperCase()}`,
     })
   }
-
   if (pointsRedeemed > 0) {
     await supabase.from('loyalty_transactions').insert({
       customer_id: customerId,

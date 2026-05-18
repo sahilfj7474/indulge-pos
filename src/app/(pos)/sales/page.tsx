@@ -169,9 +169,12 @@ export default function SalesPage() {
       {selectedSale && user && (
         <SaleDetailModal
           sale={selectedSale}
+          userId={user.id}
           canVoid={canVoidSale(user.role)}
+          canRefund={canVoidSale(user.role)}
           onClose={() => setSelectedSale(null)}
           onVoided={load}
+          onRefunded={load}
         />
       )}
     </div>

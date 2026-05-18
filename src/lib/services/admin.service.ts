@@ -47,6 +47,7 @@ export async function createProduct(data: {
   price: number
   cost: number | null
   is_active: boolean
+  image_url?: string | null
 }): Promise<Product> {
   const supabase = createClient()
   const { data: created, error } = await supabase.from('products').insert(data).select('*, category:categories(*)').single()
@@ -62,6 +63,7 @@ export async function updateProduct(id: string, data: Partial<{
   price: number
   cost: number | null
   is_active: boolean
+  image_url: string | null
 }>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('products').update(data).eq('id', id)
