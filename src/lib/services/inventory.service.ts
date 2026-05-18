@@ -3,12 +3,47 @@ import { InventoryItem, InventoryAdjustment } from '@/types'
 
 export async function getInventory(locationId: string): Promise<InventoryItem[]> {
   const supabase = createClient()
-  const { data } = await supabase
-    .from('inventory')
-    .select('*, product:products(*, category:categories(*))')
-    .eq('location_id', locationId)
-    .order('quantity', { ascending: true })
-  return (data ?? []) as unknown as InventoryItem[]
+
+  // Fetch all active products and existing inventory records in parallel
+  const [{ data: products }, { data: invRows }] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*, category:categories(*)')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('inventory')
+      .select('*')
+      .eq('location_id', locationId),
+  ])
+
+  const invMap = new Map(
+    (invRows ?? []).map((r: any) => [r.product_id, r])
+  )
+
+  // Merge: every product gets an inventory row (real or virtual with qty 0)
+  const merged = (products ?? []).map((p: any) => {
+    const inv = invMap.get(p.id)
+    return {
+      id: inv?.id ?? p.id,
+      product_id: p.id,
+      location_id: locationId,
+      quantity: inv?.quantity ?? 0,
+      low_stock_threshold: inv?.low_stock_threshold ?? 10,
+      updated_at: inv?.updated_at ?? p.created_at,
+      product: p,
+    }
+  })
+
+  // Sort: low stock first, then alphabetical
+  merged.sort((a, b) => {
+    const aLow = a.quantity < a.low_stock_threshold ? 0 : 1
+    const bLow = b.quantity < b.low_stock_threshold ? 0 : 1
+    if (aLow !== bLow) return aLow - bLow
+    return (a.product?.name ?? '').localeCompare(b.product?.name ?? '')
+  })
+
+  return merged as unknown as InventoryItem[]
 }
 
 export async function getAllInventory(): Promise<InventoryItem[]> {
