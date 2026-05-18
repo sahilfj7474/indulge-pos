@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useMemo } from 'react'
 import { Sale } from '@/types'
@@ -78,14 +78,14 @@ export default function SalesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Sales History</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-900">Sales History</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
             {totals.count} transactions · {formatCurrency(totals.revenue)} revenue
           </p>
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
         >
           <Download size={14} /> Export CSV
         </button>
@@ -94,28 +94,28 @@ export default function SalesPage() {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search receipt #, customer, cashier..."
-            className="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-          className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-          className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">All status</option>
           <option value="completed">Completed</option>
           <option value="voided">Voided</option>
           <option value="refunded">Refunded</option>
         </select>
         <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}
-          className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">All payments</option>
           <option value="cash">Cash</option>
           <option value="card">Card</option>
@@ -125,36 +125,36 @@ export default function SalesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800">
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Receipt #</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Date & Time</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Cashier</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Customer</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Payment</th>
-              <th className="text-right px-4 py-3 text-gray-400 font-medium">Total</th>
-              <th className="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
+            <tr className="border-b border-blue-100">
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Receipt #</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Date & Time</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Cashier</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Customer</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Payment</th>
+              <th className="text-right px-4 py-3 text-slate-500 font-medium">Total</th>
+              <th className="text-center px-4 py-3 text-slate-500 font-medium">Status</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="text-center py-12 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={7} className="text-center py-12 text-slate-400">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-12 text-gray-500">No sales found for this period</td></tr>
+              <tr><td colSpan={7} className="text-center py-12 text-slate-400">No sales found for this period</td></tr>
             ) : filtered.map(sale => (
               <tr
                 key={sale.id}
                 onClick={() => setSelectedSale(sale)}
-                className="border-b border-gray-800/50 hover:bg-gray-800/40 cursor-pointer transition-colors"
+                className="border-b border-blue-200/50 hover:bg-blue-50/40 cursor-pointer transition-colors"
               >
-                <td className="px-4 py-3 font-mono text-indigo-400 text-xs">{sale.id.slice(0, 8).toUpperCase()}</td>
-                <td className="px-4 py-3 text-gray-400 text-xs">{formatDateTime(sale.created_at)}</td>
-                <td className="px-4 py-3 text-gray-300">{(sale.user as unknown as { full_name: string })?.full_name ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-300">{(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}</td>
-                <td className="px-4 py-3 text-gray-400 capitalize">{sale.payment_method.replace('_', ' ')}</td>
-                <td className="px-4 py-3 text-right font-semibold text-white">{formatCurrency(sale.total)}</td>
+                <td className="px-4 py-3 font-mono text-blue-500 text-xs">{sale.id.slice(0, 8).toUpperCase()}</td>
+                <td className="px-4 py-3 text-slate-500 text-xs">{formatDateTime(sale.created_at)}</td>
+                <td className="px-4 py-3 text-slate-600">{(sale.user as unknown as { full_name: string })?.full_name ?? '—'}</td>
+                <td className="px-4 py-3 text-slate-600">{(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}</td>
+                <td className="px-4 py-3 text-slate-500 capitalize">{sale.payment_method.replace('_', ' ')}</td>
+                <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(sale.total)}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[sale.status] ?? '')}>
                     {sale.status}

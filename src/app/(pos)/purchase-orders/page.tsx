@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
@@ -14,7 +14,7 @@ import { Plus, ChevronRight, Package, X, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const STATUS_STYLE: Record<string, string> = {
-  draft:     'bg-gray-700 text-gray-400',
+  draft:     'bg-blue-100 text-slate-500',
   ordered:   'bg-blue-900/50 text-blue-400',
   received:  'bg-green-900/50 text-green-400',
   cancelled: 'bg-red-900/50 text-red-400',
@@ -115,44 +115,44 @@ export default function PurchaseOrdersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Purchase Orders</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{orders.length} order{orders.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-xl font-bold text-slate-900">Purchase Orders</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{orders.length} order{orders.length !== 1 ? 's' : ''}</p>
         </div>
         <button onClick={() => setShowNew(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
           <Plus size={14} /> New PO
         </button>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800">
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">PO #</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Supplier</th>
-              <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-              <th className="text-right px-4 py-3 text-gray-400 font-medium">Total</th>
-              <th className="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
+            <tr className="border-b border-blue-100">
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">PO #</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Supplier</th>
+              <th className="text-left px-4 py-3 text-slate-500 font-medium">Date</th>
+              <th className="text-right px-4 py-3 text-slate-500 font-medium">Total</th>
+              <th className="text-center px-4 py-3 text-slate-500 font-medium">Status</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-slate-400">Loading...</td></tr>
             ) : orders.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-12 text-gray-500">No purchase orders yet</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-slate-400">No purchase orders yet</td></tr>
             ) : orders.map(po => (
-              <tr key={po.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer" onClick={() => openDetail(po)}>
-                <td className="px-4 py-3 font-mono text-indigo-400 text-xs">{po.id.slice(0,8).toUpperCase()}</td>
-                <td className="px-4 py-3 text-white">{(po.supplier as unknown as { name: string })?.name}</td>
-                <td className="px-4 py-3 text-gray-400 text-xs">{formatDateTime(po.created_at)}</td>
-                <td className="px-4 py-3 text-right text-white font-semibold">{formatCurrency(po.total)}</td>
+              <tr key={po.id} className="border-b border-blue-200/50 hover:bg-blue-50/30 cursor-pointer" onClick={() => openDetail(po)}>
+                <td className="px-4 py-3 font-mono text-blue-500 text-xs">{po.id.slice(0,8).toUpperCase()}</td>
+                <td className="px-4 py-3 text-slate-900">{(po.supplier as unknown as { name: string })?.name}</td>
+                <td className="px-4 py-3 text-slate-500 text-xs">{formatDateTime(po.created_at)}</td>
+                <td className="px-4 py-3 text-right text-slate-900 font-semibold">{formatCurrency(po.total)}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLE[po.status])}>
                     {po.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-400"><ChevronRight size={14} /></td>
+                <td className="px-4 py-3 text-slate-500"><ChevronRight size={14} /></td>
               </tr>
             ))}
           </tbody>
@@ -165,28 +165,28 @@ export default function PurchaseOrdersPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Supplier *</label>
+                <label className="block text-sm text-slate-500 mb-1">Supplier *</label>
                 <select value={supplierId} onChange={e => setSupplierId(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Select supplier...</option>
                   {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Notes</label>
+                <label className="block text-sm text-slate-500 mb-1">Notes</label>
                 <input type="text" value={poNotes} onChange={e => setPoNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm text-gray-400">Items</label>
+                <label className="text-sm text-slate-500">Items</label>
                 <button onClick={() => setPoItems(prev => [...prev, { product_id: '', quantity_ordered: 1, unit_cost: 0 }])}
-                  className="text-xs text-indigo-400 hover:text-indigo-300">+ Add item</button>
+                  className="text-xs text-blue-500 hover:text-blue-400">+ Add item</button>
               </div>
               <div className="space-y-2">
-                <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 px-1">
+                <div className="grid grid-cols-12 gap-2 text-xs text-slate-400 px-1">
                   <span className="col-span-6">Product</span><span className="col-span-2 text-center">Qty</span>
                   <span className="col-span-3 text-right">Unit Cost</span>
                 </div>
@@ -194,35 +194,35 @@ export default function PurchaseOrdersPage() {
                   <div key={i} className="grid grid-cols-12 gap-2">
                     <div className="col-span-6">
                       <select value={item.product_id} onChange={e => setPoItems(prev => { const u=[...prev]; u[i]={...u[i],product_id:e.target.value}; return u })}
-                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        className="w-full px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">Select product...</option>
                         {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                       </select>
                     </div>
                     <div className="col-span-2">
                       <input type="number" min={1} value={item.quantity_ordered} onChange={e => setPoItems(prev => { const u=[...prev]; u[i]={...u[i],quantity_ordered:parseInt(e.target.value)||1}; return u })}
-                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        className="w-full px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm text-center focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div className="col-span-3">
                       <input type="number" min={0} step="0.01" value={item.unit_cost} onChange={e => setPoItems(prev => { const u=[...prev]; u[i]={...u[i],unit_cost:parseFloat(e.target.value)||0}; return u })}
-                        className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        className="w-full px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     </div>
                     <div className="col-span-1 flex items-center">
                       {poItems.length > 1 && (
-                        <button onClick={() => setPoItems(prev => prev.filter((_,j)=>j!==i))} className="text-gray-500 hover:text-red-400"><X size={14} /></button>
+                        <button onClick={() => setPoItems(prev => prev.filter((_,j)=>j!==i))} className="text-slate-400 hover:text-red-400"><X size={14} /></button>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-right text-sm text-gray-400 mt-2">
-                Order Total: <span className="text-white font-bold">{formatCurrency(poTotal)}</span>
+              <p className="text-right text-sm text-slate-500 mt-2">
+                Order Total: <span className="text-slate-900 font-bold">{formatCurrency(poTotal)}</span>
               </p>
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setShowNew(false)} className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg">Cancel</button>
-              <button onClick={handleCreate} disabled={saving} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg">
+              <button onClick={() => setShowNew(false)} className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg">Cancel</button>
+              <button onClick={handleCreate} disabled={saving} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg">
                 {saving ? 'Creating...' : 'Create PO'}
               </button>
             </div>
@@ -234,45 +234,45 @@ export default function PurchaseOrdersPage() {
       {detailPO && (
         <Modal title={`PO — ${detailPO.id.slice(0,8).toUpperCase()}`} onClose={() => setDetailPO(null)} maxWidth="max-w-2xl">
           {loadingDetail ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 text-slate-400">Loading...</div>
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><p className="text-gray-500">Supplier</p><p className="text-white">{(detailPO.supplier as unknown as { name: string })?.name}</p></div>
-                <div><p className="text-gray-500">Date</p><p className="text-white">{formatDateTime(detailPO.created_at)}</p></div>
-                <div><p className="text-gray-500">Status</p>
+                <div><p className="text-slate-400">Supplier</p><p className="text-slate-900">{(detailPO.supplier as unknown as { name: string })?.name}</p></div>
+                <div><p className="text-slate-400">Date</p><p className="text-slate-900">{formatDateTime(detailPO.created_at)}</p></div>
+                <div><p className="text-slate-400">Status</p>
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLE[detailPO.status])}>
                     {detailPO.status}
                   </span>
                 </div>
-                <div><p className="text-gray-500">Total</p><p className="text-white font-bold">{formatCurrency(detailPO.total)}</p></div>
+                <div><p className="text-slate-400">Total</p><p className="text-slate-900 font-bold">{formatCurrency(detailPO.total)}</p></div>
               </div>
 
-              <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="bg-blue-50 rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left px-3 py-2 text-gray-400">Product</th>
-                      <th className="text-right px-3 py-2 text-gray-400">Ordered</th>
-                      <th className="text-right px-3 py-2 text-gray-400">Cost</th>
-                      <th className="text-right px-3 py-2 text-gray-400">Total</th>
-                      {detailPO.status === 'ordered' && <th className="text-right px-3 py-2 text-gray-400">Received</th>}
+                    <tr className="border-b border-blue-200">
+                      <th className="text-left px-3 py-2 text-slate-500">Product</th>
+                      <th className="text-right px-3 py-2 text-slate-500">Ordered</th>
+                      <th className="text-right px-3 py-2 text-slate-500">Cost</th>
+                      <th className="text-right px-3 py-2 text-slate-500">Total</th>
+                      {detailPO.status === 'ordered' && <th className="text-right px-3 py-2 text-slate-500">Received</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {(detailPO.items ?? []).map(item => (
-                      <tr key={item.id} className="border-b border-gray-700/50">
-                        <td className="px-3 py-2 text-white">{(item.product as unknown as { name: string })?.name}</td>
-                        <td className="px-3 py-2 text-right text-gray-400">{item.quantity_ordered}</td>
-                        <td className="px-3 py-2 text-right text-gray-400">{formatCurrency(item.unit_cost)}</td>
-                        <td className="px-3 py-2 text-right text-white">{formatCurrency(item.total)}</td>
+                      <tr key={item.id} className="border-b border-blue-200/50">
+                        <td className="px-3 py-2 text-slate-900">{(item.product as unknown as { name: string })?.name}</td>
+                        <td className="px-3 py-2 text-right text-slate-500">{item.quantity_ordered}</td>
+                        <td className="px-3 py-2 text-right text-slate-500">{formatCurrency(item.unit_cost)}</td>
+                        <td className="px-3 py-2 text-right text-slate-900">{formatCurrency(item.total)}</td>
                         {detailPO.status === 'ordered' && (
                           <td className="px-3 py-2 text-right">
                             <input
                               type="number" min={0} max={item.quantity_ordered}
                               value={receivedQtys[item.id] ?? ''}
                               onChange={e => setReceivedQtys(prev => ({ ...prev, [item.id]: e.target.value }))}
-                              className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-16 px-2 py-1 bg-blue-100 border border-blue-300 rounded text-slate-900 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                           </td>
                         )}
@@ -290,7 +290,7 @@ export default function PurchaseOrdersPage() {
                       <Package size={14} /> Mark as Ordered
                     </button>
                     <button onClick={() => handleStatusChange(detailPO, 'cancelled')}
-                      className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-red-400 text-sm font-medium rounded-lg">
+                      className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-red-400 text-sm font-medium rounded-lg">
                       Cancel PO
                     </button>
                   </>

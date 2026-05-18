@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { InventoryItem } from '@/types'
@@ -63,9 +63,9 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
 
   return (
     <Modal title="Adjust Stock" onClose={onClose}>
-      <div className="mb-4 p-3 bg-gray-800 rounded-lg">
-        <p className="text-sm font-medium text-white">{item.product?.name}</p>
-        <p className="text-xs text-gray-400 mt-0.5">Current stock: <span className="text-white font-semibold">{item.quantity}</span> units</p>
+      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-sm font-medium text-slate-900">{item.product?.name}</p>
+        <p className="text-xs text-slate-500 mt-0.5">Current stock: <span className="text-slate-900 font-semibold">{item.quantity}</span> units</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,7 +78,7 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
               'flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors',
               type === 'add'
                 ? 'bg-green-600 border-green-500 text-white'
-                : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'
+                : 'bg-blue-50 border-blue-200 text-slate-500 hover:text-slate-800'
             )}
           >
             <Plus size={15} /> Add Stock
@@ -90,7 +90,7 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
               'flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors',
               type === 'remove'
                 ? 'bg-red-600 border-red-500 text-white'
-                : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'
+                : 'bg-blue-50 border-blue-200 text-slate-500 hover:text-slate-800'
             )}
           >
             <Minus size={15} /> Remove Stock
@@ -99,18 +99,18 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
 
         {/* Quantity */}
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Quantity *</label>
+          <label className="block text-sm text-slate-500 mb-1">Quantity *</label>
           <input
             type="number"
             min={1}
             value={qty}
             onChange={e => setQty(e.target.value)}
             autoFocus
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0"
           />
           {change > 0 && (
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               New stock level: <span className={cn('font-semibold', newQty < item.low_stock_threshold ? 'text-red-400' : 'text-green-400')}>{newQty}</span>
             </p>
           )}
@@ -118,11 +118,11 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
 
         {/* Reason */}
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Reason *</label>
+          <label className="block text-sm text-slate-500 mb-1">Reason *</label>
           <select
             value={reason}
             onChange={e => setReason(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
@@ -131,17 +131,17 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
               type="text"
               value={customReason}
               onChange={e => setCustomReason(e.target.value)}
-              className="w-full mt-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Describe reason..."
             />
           )}
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors">
+          <button type="button" onClick={onClose} className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors">
             Cancel
           </button>
-          <button type="submit" disabled={saving} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+          <button type="submit" disabled={saving} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
             {saving ? 'Saving...' : 'Confirm Adjustment'}
           </button>
         </div>

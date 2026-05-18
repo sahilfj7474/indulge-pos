@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
@@ -81,25 +81,25 @@ export default function RegisterPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-500">Loading...</div>
+    return <div className="flex items-center justify-center h-64 text-slate-400">Loading...</div>
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-white">Register</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Open and close your cash register session</p>
+        <h1 className="text-xl font-bold text-slate-900">Register</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Open and close your cash register session</p>
       </div>
 
       {/* Status card */}
-      <div className={`rounded-xl border p-6 ${openReg ? 'bg-green-900/20 border-green-700/40' : 'bg-gray-900 border-gray-800'}`}>
+      <div className={`rounded-xl border p-6 ${openReg ? 'bg-green-900/20 border-green-700/40' : 'bg-white border-blue-100'}`}>
         <div className="flex items-center gap-3 mb-4">
           {openReg ? (
             <Unlock size={20} className="text-green-400" />
           ) : (
-            <Lock size={20} className="text-gray-400" />
+            <Lock size={20} className="text-slate-500" />
           )}
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-slate-900">
             {openReg ? 'Register Open' : 'Register Closed'}
           </h2>
         </div>
@@ -108,15 +108,15 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-400">Opened</p>
-                <p className="text-white">{formatDateTime(openReg.opened_at)}</p>
+                <p className="text-slate-500">Opened</p>
+                <p className="text-slate-900">{formatDateTime(openReg.opened_at)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Opening Float</p>
-                <p className="text-white font-bold">{formatCurrency(openReg.opening_float)}</p>
+                <p className="text-slate-500">Opening Float</p>
+                <p className="text-slate-900 font-bold">{formatCurrency(openReg.opening_float)}</p>
               </div>
               <div>
-                <p className="text-gray-400">Cash In / Out</p>
+                <p className="text-slate-500">Cash In / Out</p>
                 <p className="text-green-400">+{formatCurrency(openReg.cash_in)}</p>
                 <p className="text-red-400">-{formatCurrency(openReg.cash_out)}</p>
               </div>
@@ -125,24 +125,24 @@ export default function RegisterPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowMovement(!showMovement)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
               >
                 <ArrowDownCircle size={14} /> Cash Movement
               </button>
             </div>
 
             {showMovement && (
-              <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+              <div className="bg-blue-50 rounded-lg p-4 space-y-3">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMovementType('in')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${movementType === 'in' ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-400'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${movementType === 'in' ? 'bg-green-700 text-white' : 'bg-blue-100 text-slate-500'}`}
                   >
                     <ArrowDownCircle size={13} /> Cash In
                   </button>
                   <button
                     onClick={() => setMovementType('out')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${movementType === 'out' ? 'bg-red-700 text-white' : 'bg-gray-700 text-gray-400'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${movementType === 'out' ? 'bg-red-700 text-white' : 'bg-blue-100 text-slate-500'}`}
                   >
                     <ArrowUpCircle size={13} /> Cash Out
                   </button>
@@ -155,18 +155,18 @@ export default function RegisterPage() {
                     value={movementAmount}
                     onChange={e => setMovementAmount(e.target.value)}
                     placeholder="Amount"
-                    className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1 px-3 py-2 bg-blue-100 border border-blue-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button onClick={handleMovement}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                     Record
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="border-t border-gray-700 pt-4">
-              <label className="block text-sm text-gray-400 mb-2">Closing Float (counted cash)</label>
+            <div className="border-t border-blue-200 pt-4">
+              <label className="block text-sm text-slate-500 mb-2">Closing Float (counted cash)</label>
               <div className="flex gap-3">
                 <input
                   type="number"
@@ -175,7 +175,7 @@ export default function RegisterPage() {
                   value={closingFloat}
                   onChange={e => setClosingFloat(e.target.value)}
                   placeholder="0.00"
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={handleClose}
@@ -188,7 +188,7 @@ export default function RegisterPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-gray-400">Enter your opening float to start a register session.</p>
+            <p className="text-sm text-slate-500">Enter your opening float to start a register session.</p>
             <div className="flex gap-3">
               <input
                 type="number"
@@ -197,7 +197,7 @@ export default function RegisterPage() {
                 value={openingFloat}
                 onChange={e => setOpeningFloat(e.target.value)}
                 placeholder="Opening float (e.g. 200.00)"
-                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={handleOpen}
@@ -213,27 +213,27 @@ export default function RegisterPage() {
       {/* History */}
       {history.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-white mb-3">Session History</h2>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <h2 className="text-base font-semibold text-slate-900 mb-3">Session History</h2>
+          <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Opened</th>
-                  <th className="text-left px-4 py-3 text-gray-400 font-medium">Closed</th>
-                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Float In</th>
-                  <th className="text-right px-4 py-3 text-gray-400 font-medium">Float Out</th>
-                  <th className="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
+                <tr className="border-b border-blue-100">
+                  <th className="text-left px-4 py-3 text-slate-500 font-medium">Opened</th>
+                  <th className="text-left px-4 py-3 text-slate-500 font-medium">Closed</th>
+                  <th className="text-right px-4 py-3 text-slate-500 font-medium">Float In</th>
+                  <th className="text-right px-4 py-3 text-slate-500 font-medium">Float Out</th>
+                  <th className="text-center px-4 py-3 text-slate-500 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map(reg => (
-                  <tr key={reg.id} className="border-b border-gray-800/50">
-                    <td className="px-4 py-3 text-gray-300 text-xs">{formatDateTime(reg.opened_at)}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">{reg.closed_at ? formatDateTime(reg.closed_at) : '—'}</td>
-                    <td className="px-4 py-3 text-right text-white">{formatCurrency(reg.opening_float)}</td>
-                    <td className="px-4 py-3 text-right text-white">{reg.closing_float != null ? formatCurrency(reg.closing_float) : '—'}</td>
+                  <tr key={reg.id} className="border-b border-blue-200/50">
+                    <td className="px-4 py-3 text-slate-600 text-xs">{formatDateTime(reg.opened_at)}</td>
+                    <td className="px-4 py-3 text-slate-500 text-xs">{reg.closed_at ? formatDateTime(reg.closed_at) : '—'}</td>
+                    <td className="px-4 py-3 text-right text-slate-900">{formatCurrency(reg.opening_float)}</td>
+                    <td className="px-4 py-3 text-right text-slate-900">{reg.closing_float != null ? formatCurrency(reg.closing_float) : '—'}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'open' ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'open' ? 'bg-green-900/50 text-green-400' : 'bg-blue-100 text-slate-500'}`}>
                         {reg.status}
                       </span>
                     </td>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { InventoryItem } from '@/types'
@@ -41,23 +41,23 @@ export default function SetStockModal({ item, userId, onClose, onSaved }: Props)
 
   return (
     <Modal title="Set Stock Level" onClose={onClose}>
-      <div className="mb-4 p-3 bg-gray-800 rounded-lg">
-        <p className="text-sm font-medium text-white">{item.product?.name}</p>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Current stock: <span className="text-white font-semibold">{item.quantity}</span> units
+      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-sm font-medium text-slate-900">{item.product?.name}</p>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Current stock: <span className="text-slate-900 font-semibold">{item.quantity}</span> units
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1">New Stock Level *</label>
+          <label className="block text-sm text-slate-500 mb-1">New Stock Level *</label>
           <input
             type="number"
             min={0}
             value={qty}
             onChange={e => setQty(e.target.value)}
             autoFocus
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-2xl text-right font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-2xl text-right font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0"
           />
           {qty !== '' && diff !== 0 && (
@@ -66,16 +66,16 @@ export default function SetStockModal({ item, userId, onClose, onSaved }: Props)
             </p>
           )}
           {diff === 0 && qty !== '' && (
-            <p className="text-xs mt-1 text-gray-500">No change from current level</p>
+            <p className="text-xs mt-1 text-slate-400">No change from current level</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Reason</label>
+          <label className="block text-sm text-slate-500 mb-1">Reason</label>
           <select
             value={reason}
             onChange={e => setReason(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option>Stock count correction</option>
             <option>Opening stock</option>
@@ -86,11 +86,11 @@ export default function SetStockModal({ item, userId, onClose, onSaved }: Props)
 
         <div className="flex gap-3 pt-2">
           <button type="button" onClick={onClose}
-            className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors">
+            className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors">
             Cancel
           </button>
           <button type="submit" disabled={saving || diff === 0}
-            className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+            className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
             {saving ? 'Saving...' : 'Set Level'}
           </button>
         </div>

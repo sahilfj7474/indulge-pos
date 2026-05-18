@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { PaymentMethod } from '@/types'
@@ -62,11 +62,11 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
   const splitMethods = ALL_METHODS.filter(m => m.value !== 'account')
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Payment</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+    <div className="fixed inset-0 bg-blue-950/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100">
+          <h2 className="text-lg font-semibold text-slate-900">Payment</h2>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
             <X size={18} />
           </button>
         </div>
@@ -74,10 +74,10 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
         <div className="p-5 space-y-4">
           {/* Total */}
           <div className="text-center">
-            <p className="text-sm text-gray-400">Amount Due</p>
-            <p className="text-3xl font-bold text-indigo-400">{formatCurrency(total)}</p>
+            <p className="text-sm text-slate-500">Amount Due</p>
+            <p className="text-3xl font-bold text-blue-500">{formatCurrency(total)}</p>
             {loyaltyPointsRedeemed > 0 && (
-              <p className="text-xs text-indigo-300 mt-0.5">Includes {loyaltyPointsRedeemed} pts redeemed</p>
+              <p className="text-xs text-blue-400 mt-0.5">Includes {loyaltyPointsRedeemed} pts redeemed</p>
             )}
           </div>
 
@@ -86,14 +86,14 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
             <button
               onClick={() => setIsSplit(false)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                !isSplit ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white')}
+                !isSplit ? 'bg-blue-600 text-white' : 'bg-blue-50 text-slate-500 hover:text-slate-800')}
             >
               Single
             </button>
             <button
               onClick={() => setIsSplit(true)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                isSplit ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white')}
+                isSplit ? 'bg-blue-600 text-white' : 'bg-blue-50 text-slate-500 hover:text-slate-800')}
             >
               <Split size={12} /> Split
             </button>
@@ -115,10 +115,10 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                       className={cn(
                         'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors',
                         method === m.value
-                          ? 'bg-indigo-600 border-indigo-500 text-white'
+                          ? 'bg-blue-600 border-blue-500 text-white'
                           : disabled
-                            ? 'bg-gray-800/40 border-gray-800 text-gray-600 cursor-not-allowed'
-                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
+                            ? 'bg-blue-50/40 border-blue-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-blue-50 border-blue-200 text-slate-500 hover:text-slate-800 hover:border-blue-300'
                       )}
                     >
                       <Icon size={15} />{m.label}
@@ -134,18 +134,18 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
               {/* Cash tendered */}
               {method === 'cash' && (
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Amount Tendered</label>
+                  <label className="block text-sm text-slate-500 mb-1">Amount Tendered</label>
                   <input
                     type="number"
                     autoFocus
                     value={tendered}
                     onChange={e => setTendered(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-lg text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0.00"
                   />
                   {parseFloat(tendered || '0') >= total && (
                     <div className="flex justify-between mt-2 text-sm">
-                      <span className="text-gray-400">Change</span>
+                      <span className="text-slate-500">Change</span>
                       <span className="text-green-400 font-semibold">{formatCurrency(change)}</span>
                     </div>
                   )}
@@ -161,12 +161,12 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Payment 1</label>
+                <label className="block text-xs text-slate-500 mb-1">Payment 1</label>
                 <div className="flex gap-2">
                   <select
                     value={split1Method}
                     onChange={e => setSplit1Method(e.target.value as SingleMethod)}
-                    className="flex-1 px-2 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 px-2 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {splitMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
@@ -175,21 +175,21 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                     value={split1Amount}
                     onChange={e => setSplit1Amount(e.target.value)}
                     placeholder="Amount"
-                    className="w-24 px-2 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-24 px-2 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-slate-900 text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Payment 2 (remaining)</label>
+                <label className="block text-xs text-slate-500 mb-1">Payment 2 (remaining)</label>
                 <div className="flex gap-2">
                   <select
                     value={split2Method}
                     onChange={e => setSplit2Method(e.target.value as SingleMethod)}
-                    className="flex-1 px-2 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 px-2 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {splitMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
-                  <div className="w-24 px-2 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white text-right">
+                  <div className="w-24 px-2 py-2 bg-blue-100 border border-blue-300 rounded-lg text-sm text-slate-900 text-right">
                     {formatCurrency(split2)}
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
           <button
             onClick={handleConfirm}
             disabled={!singleCanComplete}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold rounded-lg transition-colors"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold rounded-lg transition-colors"
           >
             Complete Sale
           </button>

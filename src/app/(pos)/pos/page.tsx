@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useMemo } from 'react'
 import { CartItem, Category, Customer, PaymentMethod, Product, Sale } from '@/types'
@@ -264,8 +264,8 @@ export default function POSPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-gray-400">No location assigned to your account.</p>
-          <p className="text-gray-500 text-sm mt-1">Contact an admin to assign you to a location.</p>
+          <p className="text-slate-500">No location assigned to your account.</p>
+          <p className="text-slate-400 text-sm mt-1">Contact an admin to assign you to a location.</p>
         </div>
       </div>
     )
@@ -300,7 +300,7 @@ export default function POSPage() {
 
         <div className="flex-1 overflow-y-auto">
           {loadingProducts ? (
-            <div className="flex items-center justify-center h-48 text-gray-500 text-sm">Loading products...</div>
+            <div className="flex items-center justify-center h-48 text-slate-400 text-sm">Loading products...</div>
           ) : (
             <ProductGrid products={displayProducts} onAdd={addToCart} />
           )}

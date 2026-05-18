@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { CartItem, Customer } from '@/types'
@@ -101,32 +101,32 @@ export default function Cart({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 border-l border-gray-800">
+    <div className="flex flex-col h-full bg-white border-l border-blue-100">
       {/* Customer */}
-      <div className="p-3 border-b border-gray-800">
+      <div className="p-3 border-b border-blue-100">
         <CustomerSearch selected={customer} onSelect={onCustomerChange} />
       </div>
 
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {items.length === 0 && (
-          <div className="flex items-center justify-center h-full text-gray-600 text-sm">
+          <div className="flex items-center justify-center h-full text-slate-400 text-sm">
             Cart is empty
           </div>
         )}
         {items.map((item, i) => (
-          <div key={`${item.product.id}-${i}`} className="bg-gray-800 rounded-lg p-2.5">
+          <div key={`${item.product.id}-${i}`} className="bg-blue-50 rounded-lg p-2.5">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-white leading-tight flex-1">{item.product.name}</p>
+              <p className="text-sm font-medium text-slate-900 leading-tight flex-1">{item.product.name}</p>
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => toggleNote(i)}
                   title="Add note"
-                  className={cn('text-gray-500 hover:text-indigo-400', expandedNotes.has(i) && 'text-indigo-400')}
+                  className={cn('text-slate-400 hover:text-blue-500', expandedNotes.has(i) && 'text-blue-500')}
                 >
                   <MessageSquare size={13} />
                 </button>
-                <button onClick={() => onRemove(i)} className="text-gray-500 hover:text-red-400">
+                <button onClick={() => onRemove(i)} className="text-slate-400 hover:text-red-400">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -135,23 +135,23 @@ export default function Cart({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => onQtyChange(i, item.quantity - 1)}
-                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 flex items-center justify-center"
+                  className="w-6 h-6 rounded bg-blue-100 hover:bg-blue-200 flex items-center justify-center"
                 >
                   <Minus size={11} />
                 </button>
-                <span className="text-sm w-5 text-center text-white">{item.quantity}</span>
+                <span className="text-sm w-5 text-center text-slate-900">{item.quantity}</span>
                 <button
                   onClick={() => onQtyChange(i, item.quantity + 1)}
-                  className="w-6 h-6 rounded bg-gray-700 hover:bg-gray-600 flex items-center justify-center"
+                  className="w-6 h-6 rounded bg-blue-100 hover:bg-blue-200 flex items-center justify-center"
                 >
                   <Plus size={11} />
                 </button>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-slate-900">
                   {formatCurrency(item.unit_price * item.quantity - item.discount_amount)}
                 </p>
-                <p className="text-xs text-gray-500">{formatCurrency(item.unit_price)} each</p>
+                <p className="text-xs text-slate-400">{formatCurrency(item.unit_price)} each</p>
               </div>
             </div>
             {expandedNotes.has(i) && (
@@ -160,7 +160,7 @@ export default function Cart({
                 value={item.note}
                 onChange={e => onNoteChange(i, e.target.value)}
                 placeholder="Note for this item..."
-                className="mt-2 w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="mt-2 w-full px-2 py-1 bg-blue-100 border border-blue-300 rounded text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             )}
           </div>
@@ -169,7 +169,7 @@ export default function Cart({
 
       {/* Discount + Surcharge */}
       {items.length > 0 && (
-        <div className="px-3 py-2 border-t border-gray-800 space-y-2">
+        <div className="px-3 py-2 border-t border-blue-100 space-y-2">
           {/* Auto-applied promo badge */}
           {appliedPromoName && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-800/50 rounded-lg">
@@ -180,16 +180,16 @@ export default function Cart({
 
           {/* Discount */}
           <div className="flex items-center gap-2">
-            <Tag size={13} className="text-gray-400" />
-            <span className="text-xs text-gray-400 flex-1">Discount</span>
+            <Tag size={13} className="text-slate-500" />
+            <span className="text-xs text-slate-500 flex-1">Discount</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onDiscountTypeChange('percentage')}
-                className={cn('px-2 py-0.5 text-xs rounded', discountType === 'percentage' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400')}
+                className={cn('px-2 py-0.5 text-xs rounded', discountType === 'percentage' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-slate-500')}
               >%</button>
               <button
                 onClick={() => onDiscountTypeChange('fixed')}
-                className={cn('px-2 py-0.5 text-xs rounded', discountType === 'fixed' ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400')}
+                className={cn('px-2 py-0.5 text-xs rounded', discountType === 'fixed' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-slate-500')}
               >$</button>
             </div>
             <input
@@ -197,22 +197,22 @@ export default function Cart({
               min={0}
               value={discountValue || ''}
               onChange={e => onDiscountValueChange(parseFloat(e.target.value) || 0)}
-              className="w-16 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-sm text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-16 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-sm text-slate-900 text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="0"
             />
           </div>
 
           {/* Surcharge */}
           <div className="flex items-center gap-2">
-            <Percent size={13} className="text-gray-400" />
-            <span className="text-xs text-gray-400 flex-1">Surcharge</span>
+            <Percent size={13} className="text-slate-500" />
+            <span className="text-xs text-slate-500 flex-1">Surcharge</span>
             <input
               type="number"
               min={0}
               step="0.01"
               value={surchargeAmount || ''}
               onChange={e => onSurchargeChange(parseFloat(e.target.value) || 0)}
-              className="w-16 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded text-sm text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-16 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-sm text-slate-900 text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="0.00"
             />
           </div>
@@ -220,14 +220,14 @@ export default function Cart({
           {/* Loyalty redemption */}
           {customer && customer.loyalty_points > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-indigo-400 flex-1">Redeem points ({customer.loyalty_points} avail.)</span>
+              <span className="text-xs text-blue-500 flex-1">Redeem points ({customer.loyalty_points} avail.)</span>
               <input
                 type="number"
                 min={0}
                 max={maxRedeem}
                 value={loyaltyPointsToRedeem || ''}
                 onChange={e => onLoyaltyRedeemChange(Math.min(maxRedeem, parseInt(e.target.value) || 0))}
-                className="w-16 px-2 py-0.5 bg-gray-800 border border-indigo-700 rounded text-sm text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-16 px-2 py-0.5 bg-blue-50 border border-blue-700 rounded text-sm text-slate-900 text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="0"
               />
             </div>
@@ -236,8 +236,8 @@ export default function Cart({
       )}
 
       {/* Totals */}
-      <div className="px-3 py-3 border-t border-gray-800 space-y-1.5">
-        <div className="flex justify-between text-sm text-gray-400">
+      <div className="px-3 py-3 border-t border-blue-100 space-y-1.5">
+        <div className="flex justify-between text-sm text-slate-500">
           <span>Subtotal</span><span>{formatCurrency(subtotal)}</span>
         </div>
         {discountAmount > 0 && (
@@ -246,11 +246,11 @@ export default function Cart({
           </div>
         )}
         {loyaltyDiscount > 0 && (
-          <div className="flex justify-between text-sm text-indigo-400">
+          <div className="flex justify-between text-sm text-blue-500">
             <span>Points redeemed</span><span>-{formatCurrency(loyaltyDiscount)}</span>
           </div>
         )}
-        <div className="flex justify-between text-sm text-gray-400">
+        <div className="flex justify-between text-sm text-slate-500">
           <span>{taxLabel}</span><span>{formatCurrency(taxAmount)}</span>
         </div>
         {surchargeAmount > 0 && (
@@ -258,9 +258,9 @@ export default function Cart({
             <span>Surcharge</span><span>+{formatCurrency(surchargeAmount)}</span>
           </div>
         )}
-        <div className="flex justify-between text-base font-bold text-white border-t border-gray-700 pt-1.5 mt-1">
+        <div className="flex justify-between text-base font-bold text-slate-900 border-t border-blue-200 pt-1.5 mt-1">
           <span>Total</span>
-          <span className="text-indigo-400">{formatCurrency(total)}</span>
+          <span className="text-blue-500">{formatCurrency(total)}</span>
         </div>
       </div>
 
@@ -270,7 +270,7 @@ export default function Cart({
           <button
             onClick={onClear}
             disabled={items.length === 0}
-            className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 text-gray-300 text-sm font-medium rounded-lg transition-colors"
+            className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 disabled:opacity-40 text-slate-600 text-sm font-medium rounded-lg transition-colors"
           >
             Clear
           </button>
@@ -278,7 +278,7 @@ export default function Cart({
             onClick={onHold}
             disabled={items.length === 0}
             title="Hold order"
-            className="px-3 py-2 bg-gray-800 hover:bg-amber-900/40 disabled:opacity-40 text-amber-400 text-sm font-medium rounded-lg transition-colors"
+            className="px-3 py-2 bg-blue-50 hover:bg-amber-900/40 disabled:opacity-40 text-amber-400 text-sm font-medium rounded-lg transition-colors"
           >
             <PauseCircle size={16} />
           </button>
@@ -286,7 +286,7 @@ export default function Cart({
         <button
           onClick={onCharge}
           disabled={items.length === 0}
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-sm font-bold rounded-lg transition-colors"
+          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-bold rounded-lg transition-colors"
         >
           Charge {items.length > 0 ? formatCurrency(total) : ''}
         </button>

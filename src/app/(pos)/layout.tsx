@@ -3,7 +3,7 @@ import Header from '@/components/ui/Header'
 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
+    <div className="flex h-screen bg-blue-50 text-slate-900 overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Category } from '@/types'
 import { cn } from '@/lib/utils'
@@ -17,8 +17,8 @@ export default function CategoryFilter({ categories, selected, onSelect }: Props
         className={cn(
           'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
           selected === null
-            ? 'bg-indigo-600 text-white'
-            : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+            ? 'bg-blue-600 text-white'
+            : 'bg-blue-50 text-slate-500 hover:text-slate-800 hover:bg-blue-100'
         )}
       >
         All
@@ -31,7 +31,7 @@ export default function CategoryFilter({ categories, selected, onSelect }: Props
             'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
             selected === cat.id
               ? 'text-white'
-              : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+              : 'bg-blue-50 text-slate-500 hover:text-slate-800 hover:bg-blue-100'
           )}
           style={selected === cat.id ? { backgroundColor: cat.color ?? '#6366f1' } : undefined}
         >

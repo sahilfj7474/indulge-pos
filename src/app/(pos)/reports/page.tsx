@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth/context'
@@ -78,10 +78,10 @@ export default function ReportsPage() {
     : null
 
   const MetricCard = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <p className="text-sm text-gray-400">{label}</p>
-      <p className="text-2xl font-bold text-white mt-1">{value}</p>
-      {sub && <p className="text-xs text-gray-500 mt-0.5">{sub}</p>}
+    <div className="bg-white border border-blue-100 rounded-xl p-4">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+      {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
     </div>
   )
 
@@ -90,15 +90,15 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Reports</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{loading ? 'Loading...' : `${totalTx} transactions`}</p>
+          <h1 className="text-xl font-bold text-slate-900">Reports</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{loading ? 'Loading...' : `${totalTx} transactions`}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            className="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <span className="text-gray-500 self-center text-sm">to</span>
+            className="px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span className="text-slate-400 self-center text-sm">to</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            className="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           {/* Quick ranges */}
           {[
             { label: 'Today',     from: TODAY, to: TODAY },
@@ -106,7 +106,7 @@ export default function ReportsPage() {
             { label: 'This Month',from: TODAY.slice(0,7) + '-01', to: TODAY },
           ].map(r => (
             <button key={r.label} onClick={() => { setDateFrom(r.from); setDateTo(r.to) }}
-              className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-lg transition-colors">
+              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-xs font-medium rounded-lg transition-colors">
               {r.label}
             </button>
           ))}
@@ -114,13 +114,13 @@ export default function ReportsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto bg-gray-900 p-1 rounded-lg border border-gray-800 w-fit">
+      <div className="flex gap-1 overflow-x-auto bg-white p-1 rounded-lg border border-blue-100 w-fit">
         {TABS.map(t => {
           const Icon = t.icon
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors',
-                tab === t.id ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white')}>
+                tab === t.id ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-800')}>
               <Icon size={13} />{t.label}
             </button>
           )
@@ -138,8 +138,8 @@ export default function ReportsPage() {
           </div>
 
           {trend.labels.length > 1 ? (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Sales Trend</h3>
+            <div className="bg-white border border-blue-100 rounded-xl p-4">
+              <h3 className="text-sm font-medium text-slate-600 mb-3">Sales Trend</h3>
               <Line data={{
                 labels: trend.labels,
                 datasets: [{
@@ -154,7 +154,7 @@ export default function ReportsPage() {
               }} options={CHART_OPTIONS} />
             </div>
           ) : (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500 text-sm">
+            <div className="bg-white border border-blue-100 rounded-xl p-8 text-center text-slate-400 text-sm">
               Select a date range spanning multiple days to see the sales trend.
             </div>
           )}
@@ -166,33 +166,33 @@ export default function ReportsPage() {
         <div className="space-y-4">
           <div className="flex justify-end">
             <button onClick={() => exportToCSV(byProduct.map(p => ({ Product: p.name, 'Qty Sold': p.qty, Total: p.total })), 'top-products')}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg">
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm rounded-lg">
               <Download size={13} /> Export
             </button>
           </div>
           {byProduct.length > 0 ? (
             <>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Top Products by Revenue</h3>
+              <div className="bg-white border border-blue-100 rounded-xl p-4">
+                <h3 className="text-sm font-medium text-slate-600 mb-3">Top Products by Revenue</h3>
                 <Bar data={{
                   labels: byProduct.slice(0,10).map(p => p.name.length > 20 ? p.name.slice(0,18)+'…' : p.name),
                   datasets: [{ data: byProduct.slice(0,10).map(p => p.total), backgroundColor: CHART_COLORS }],
                 }} options={{ ...CHART_OPTIONS, plugins: { legend: { display: false } } }} />
               </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">#</th>
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Product</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Qty Sold</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Revenue</th>
+                  <thead><tr className="border-b border-blue-100">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">#</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Product</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Qty Sold</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Revenue</th>
                   </tr></thead>
                   <tbody>{byProduct.map((p, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="px-4 py-3 text-gray-500">{i + 1}</td>
-                      <td className="px-4 py-3 text-white">{p.name}</td>
-                      <td className="px-4 py-3 text-right text-gray-300">{p.qty}</td>
-                      <td className="px-4 py-3 text-right font-medium text-white">{formatCurrency(p.total)}</td>
+                    <tr key={i} className="border-b border-blue-200/50">
+                      <td className="px-4 py-3 text-slate-400">{i + 1}</td>
+                      <td className="px-4 py-3 text-slate-900">{p.name}</td>
+                      <td className="px-4 py-3 text-right text-slate-600">{p.qty}</td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-900">{formatCurrency(p.total)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -207,7 +207,7 @@ export default function ReportsPage() {
         <div className="space-y-4">
           {byCategory.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-center">
+              <div className="bg-white border border-blue-100 rounded-xl p-4 flex items-center justify-center">
                 <div className="w-72">
                   <Doughnut data={{
                     labels: byCategory.map(c => c.name),
@@ -215,21 +215,21 @@ export default function ReportsPage() {
                   }} options={{ plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 12 } } } }} />
                 </div>
               </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Category</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Revenue</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Share</th>
+                  <thead><tr className="border-b border-blue-100">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Category</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Revenue</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Share</th>
                   </tr></thead>
                   <tbody>{byCategory.map((c, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
+                    <tr key={i} className="border-b border-blue-200/50">
                       <td className="px-4 py-3 flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                        <span className="text-white">{c.name}</span>
+                        <span className="text-slate-900">{c.name}</span>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-white">{formatCurrency(c.total)}</td>
-                      <td className="px-4 py-3 text-right text-gray-400">
+                      <td className="px-4 py-3 text-right font-medium text-slate-900">{formatCurrency(c.total)}</td>
+                      <td className="px-4 py-3 text-right text-slate-500">
                         {totalRevenue ? ((c.total / totalRevenue) * 100).toFixed(1) : 0}%
                       </td>
                     </tr>
@@ -246,32 +246,32 @@ export default function ReportsPage() {
         <div className="space-y-4">
           <div className="flex justify-end">
             <button onClick={() => exportToCSV(byStaff.map(s => ({ Staff: s.name, Transactions: s.count, Revenue: s.total, Discounts: s.discount })), 'sales-by-staff')}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg">
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm rounded-lg">
               <Download size={13} /> Export
             </button>
           </div>
           {byStaff.length > 0 ? (
             <>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div className="bg-white border border-blue-100 rounded-xl p-4">
                 <Bar data={{
                   labels: byStaff.map(s => s.name),
                   datasets: [{ data: byStaff.map(s => s.total), backgroundColor: CHART_COLORS }],
                 }} options={CHART_OPTIONS} />
               </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Cashier</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Transactions</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Discounts Given</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Revenue</th>
+                  <thead><tr className="border-b border-blue-100">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Cashier</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Transactions</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Discounts Given</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Revenue</th>
                   </tr></thead>
                   <tbody>{byStaff.map((s, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="px-4 py-3 text-white font-medium">{s.name}</td>
-                      <td className="px-4 py-3 text-right text-gray-300">{s.count}</td>
-                      <td className="px-4 py-3 text-right text-gray-300">{formatCurrency(s.discount)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-white">{formatCurrency(s.total)}</td>
+                    <tr key={i} className="border-b border-blue-200/50">
+                      <td className="px-4 py-3 text-slate-900 font-medium">{s.name}</td>
+                      <td className="px-4 py-3 text-right text-slate-600">{s.count}</td>
+                      <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(s.discount)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(s.total)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -286,7 +286,7 @@ export default function ReportsPage() {
         <div className="space-y-4">
           {byPayment.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-center">
+              <div className="bg-white border border-blue-100 rounded-xl p-4 flex items-center justify-center">
                 <div className="w-72">
                   <Doughnut data={{
                     labels: byPayment.map(p => p.method.replace('_',' ')),
@@ -294,18 +294,18 @@ export default function ReportsPage() {
                   }} options={{ plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 12 } } } }} />
                 </div>
               </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden self-start">
+              <div className="bg-white border border-blue-100 rounded-xl overflow-hidden self-start">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Method</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Revenue</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Share</th>
+                  <thead><tr className="border-b border-blue-100">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Method</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Revenue</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Share</th>
                   </tr></thead>
                   <tbody>{byPayment.map((p, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="px-4 py-3 capitalize text-white">{p.method.replace('_',' ')}</td>
-                      <td className="px-4 py-3 text-right font-medium text-white">{formatCurrency(p.total)}</td>
-                      <td className="px-4 py-3 text-right text-gray-400">
+                    <tr key={i} className="border-b border-blue-200/50">
+                      <td className="px-4 py-3 capitalize text-slate-900">{p.method.replace('_',' ')}</td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-900">{formatCurrency(p.total)}</td>
+                      <td className="px-4 py-3 text-right text-slate-500">
                         {totalRevenue ? ((p.total / totalRevenue) * 100).toFixed(1) : 0}%
                       </td>
                     </tr>
@@ -319,8 +319,8 @@ export default function ReportsPage() {
 
       {/* Hourly tab */}
       {tab === 'hourly' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Revenue by Hour of Day</h3>
+        <div className="bg-white border border-blue-100 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-slate-600 mb-3">Revenue by Hour of Day</h3>
           {sales.length > 0 ? (
             <Bar data={{
               labels: hourly.map(h => h.label),
@@ -333,24 +333,24 @@ export default function ReportsPage() {
       {/* Z/X Report tab */}
       {tab === 'zreport' && zData && (
         <div className="space-y-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 max-w-md">
-            <h3 className="text-sm font-semibold text-white mb-1">End of Day Report</h3>
-            <p className="text-xs text-gray-400 mb-4">
+          <div className="bg-white border border-blue-100 rounded-xl p-5 max-w-md">
+            <h3 className="text-sm font-semibold text-slate-900 mb-1">End of Day Report</h3>
+            <p className="text-xs text-slate-500 mb-4">
               X-Report is a snapshot. Z-Report closes the day and records the summary.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setZType('X')}
-                className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-lg border border-gray-700 transition-colors">
+                className="flex-1 py-2.5 bg-blue-50 hover:bg-blue-100 text-slate-900 text-sm font-medium rounded-lg border border-blue-200 transition-colors">
                 Print X-Report
               </button>
               <button onClick={() => setZType('Z')}
-                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                 Print Z-Report
               </button>
             </div>
 
             {/* Preview */}
-            <div className="mt-4 space-y-1.5 text-sm border-t border-gray-800 pt-4">
+            <div className="mt-4 space-y-1.5 text-sm border-t border-blue-100 pt-4">
               {[
                 ['Transactions',   String(zData.totalTransactions)],
                 ['Gross Sales',    formatCurrency(zData.totalSales)],
@@ -363,10 +363,10 @@ export default function ReportsPage() {
                 ['Bank Transfer',  formatCurrency(zData.bankSales)],
                 ['Loyalty Points', formatCurrency(zData.loyaltySales)],
               ].map(([label, value], i) =>
-                label === '—' ? <hr key={i} className="border-gray-800" /> : (
+                label === '—' ? <hr key={i} className="border-blue-100" /> : (
                   <div key={i} className="flex justify-between">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="text-white font-medium">{value}</span>
+                    <span className="text-slate-500">{label}</span>
+                    <span className="text-slate-900 font-medium">{value}</span>
                   </div>
                 )
               )}
@@ -384,7 +384,7 @@ export default function ReportsPage() {
 
 function EmptyState() {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center text-gray-500 text-sm">
+    <div className="bg-white border border-blue-100 rounded-xl p-12 text-center text-slate-400 text-sm">
       No data for the selected period.
     </div>
   )

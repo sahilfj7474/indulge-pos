@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { Customer } from '@/types'
@@ -36,15 +36,15 @@ export default function CustomerSearch({ selected, onSelect }: Props) {
 
   if (selected) {
     return (
-      <div className="flex items-center justify-between bg-indigo-900/40 border border-indigo-700 rounded-lg px-3 py-2">
+      <div className="flex items-center justify-between bg-indigo-900/40 border border-blue-700 rounded-lg px-3 py-2">
         <div className="flex items-center gap-2">
-          <UserCircle size={16} className="text-indigo-400" />
+          <UserCircle size={16} className="text-blue-500" />
           <div>
-            <p className="text-sm font-medium text-white">{selected.full_name}</p>
-            <p className="text-xs text-indigo-300">{selected.loyalty_points} pts available</p>
+            <p className="text-sm font-medium text-slate-900">{selected.full_name}</p>
+            <p className="text-xs text-blue-400">{selected.loyalty_points} pts available</p>
           </div>
         </div>
-        <button onClick={() => onSelect(null)} className="text-gray-400 hover:text-white">
+        <button onClick={() => onSelect(null)} className="text-slate-500 hover:text-slate-800">
           <X size={15} />
         </button>
       </div>
@@ -54,26 +54,26 @@ export default function CustomerSearch({ selected, onSelect }: Props) {
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
         <input
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Add customer (optional)"
-          className="w-full pl-8 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
+          className="w-full pl-8 pr-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
         />
       </div>
 
       {open && results.length > 0 && (
-        <div className="absolute z-20 top-full mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute z-20 top-full mt-1 w-full bg-blue-50 border border-blue-200 rounded-lg shadow-xl overflow-hidden">
           {results.map(c => (
             <button
               key={c.id}
               onClick={() => { onSelect(c); setQuery(''); setOpen(false) }}
-              className="w-full px-3 py-2.5 text-left hover:bg-gray-700 transition-colors"
+              className="w-full px-3 py-2.5 text-left hover:bg-blue-100 transition-colors"
             >
-              <p className="text-sm font-medium text-white">{c.full_name}</p>
-              <p className="text-xs text-gray-400">{c.phone ?? c.email ?? ''} · {c.loyalty_points} pts</p>
+              <p className="text-sm font-medium text-slate-900">{c.full_name}</p>
+              <p className="text-xs text-slate-500">{c.phone ?? c.email ?? ''} · {c.loyalty_points} pts</p>
             </button>
           ))}
         </div>

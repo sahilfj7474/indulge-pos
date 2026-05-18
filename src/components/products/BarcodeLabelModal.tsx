@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
@@ -19,7 +19,7 @@ export default function BarcodeLabelModal({ product, onClose }: Props) {
   return (
     <Modal title="Print Barcode Label" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-400">Preview below. Click Print to send to your label printer.</p>
+        <p className="text-sm text-slate-500">Preview below. Click Print to send to your label printer.</p>
 
         {/* Label preview */}
         <div className="flex justify-center">
@@ -71,11 +71,11 @@ export default function BarcodeLabelModal({ product, onClose }: Props) {
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg">
+            className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg">
             Cancel
           </button>
           <button onClick={() => handlePrint()}
-            className="flex-1 flex items-center justify-center gap-2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg">
+            className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg">
             <Printer size={14} /> Print Label
           </button>
         </div>

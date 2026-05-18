@@ -14,13 +14,13 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="h-14 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6">
+    <header className="h-14 bg-white border-b border-blue-100 flex items-center justify-between px-6 shadow-sm">
       <div />
-      <div className="flex items-center gap-4 text-sm text-gray-400">
+      <div className="flex items-center gap-4 text-sm text-slate-500">
         <span>{formatDateTime(now)}</span>
         {user && (
-          <span className="text-gray-500">
-            Logged in as <span className="text-white">{user.full_name}</span>
+          <span>
+            Logged in as <span className="text-slate-800 font-medium">{user.full_name}</span>
           </span>
         )}
       </div>

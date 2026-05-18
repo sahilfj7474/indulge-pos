@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
@@ -66,64 +66,64 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
         {/* Meta */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-gray-500">Date</p>
-            <p className="text-white">{formatDateTime(sale.created_at)}</p>
+            <p className="text-slate-400">Date</p>
+            <p className="text-slate-900">{formatDateTime(sale.created_at)}</p>
           </div>
           <div>
-            <p className="text-gray-500">Status</p>
+            <p className="text-slate-400">Status</p>
             <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[sale.status] ?? '')}>
               {sale.status.replace('_', ' ')}
             </span>
           </div>
           <div>
-            <p className="text-gray-500">Cashier</p>
-            <p className="text-white">{(sale.user as unknown as { full_name: string })?.full_name ?? '—'}</p>
+            <p className="text-slate-400">Cashier</p>
+            <p className="text-slate-900">{(sale.user as unknown as { full_name: string })?.full_name ?? '—'}</p>
           </div>
           <div>
-            <p className="text-gray-500">Customer</p>
-            <p className="text-white">{(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}</p>
+            <p className="text-slate-400">Customer</p>
+            <p className="text-slate-900">{(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}</p>
           </div>
           <div>
-            <p className="text-gray-500">Payment</p>
+            <p className="text-slate-400">Payment</p>
             {paymentDetails?.splits ? (
               <div className="space-y-0.5">
                 {paymentDetails.splits.map((sp: { method: string; amount: number }, i: number) => (
-                  <p key={i} className="text-white capitalize text-xs">
+                  <p key={i} className="text-slate-900 capitalize text-xs">
                     {sp.method.replace('_', ' ')}: {formatCurrency(sp.amount)}
                   </p>
                 ))}
               </div>
             ) : (
-              <p className="text-white capitalize">{sale.payment_method.replace('_', ' ')}</p>
+              <p className="text-slate-900 capitalize">{sale.payment_method.replace('_', ' ')}</p>
             )}
           </div>
           <div>
-            <p className="text-gray-500">Location</p>
-            <p className="text-white">{(sale.location as unknown as { name: string })?.name ?? '—'}</p>
+            <p className="text-slate-400">Location</p>
+            <p className="text-slate-900">{(sale.location as unknown as { name: string })?.name ?? '—'}</p>
           </div>
         </div>
 
         {/* Items */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="bg-blue-50 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left px-3 py-2 text-gray-400 font-medium">Item</th>
-                <th className="text-right px-3 py-2 text-gray-400 font-medium">Qty</th>
-                <th className="text-right px-3 py-2 text-gray-400 font-medium">Price</th>
-                <th className="text-right px-3 py-2 text-gray-400 font-medium">Total</th>
+              <tr className="border-b border-blue-200">
+                <th className="text-left px-3 py-2 text-slate-500 font-medium">Item</th>
+                <th className="text-right px-3 py-2 text-slate-500 font-medium">Qty</th>
+                <th className="text-right px-3 py-2 text-slate-500 font-medium">Price</th>
+                <th className="text-right px-3 py-2 text-slate-500 font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
               {(sale.items ?? []).map(item => (
-                <tr key={item.id} className="border-b border-gray-700/50">
+                <tr key={item.id} className="border-b border-blue-200/50">
                   <td className="px-3 py-2">
-                    <p className="text-white">{(item.product as unknown as { name: string })?.name}</p>
-                    {(item as any).note && <p className="text-xs text-gray-500 italic">* {(item as any).note}</p>}
+                    <p className="text-slate-900">{(item.product as unknown as { name: string })?.name}</p>
+                    {(item as any).note && <p className="text-xs text-slate-400 italic">* {(item as any).note}</p>}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-400">{item.quantity}</td>
-                  <td className="px-3 py-2 text-right text-gray-400">{formatCurrency(item.unit_price)}</td>
-                  <td className="px-3 py-2 text-right text-white">{formatCurrency(item.total)}</td>
+                  <td className="px-3 py-2 text-right text-slate-500">{item.quantity}</td>
+                  <td className="px-3 py-2 text-right text-slate-500">{formatCurrency(item.unit_price)}</td>
+                  <td className="px-3 py-2 text-right text-slate-900">{formatCurrency(item.total)}</td>
                 </tr>
               ))}
             </tbody>
@@ -132,7 +132,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
 
         {/* Totals */}
         <div className="space-y-1.5 text-sm">
-          <div className="flex justify-between text-gray-400">
+          <div className="flex justify-between text-slate-500">
             <span>Subtotal</span><span>{formatCurrency(sale.subtotal)}</span>
           </div>
           {sale.discount_amount > 0 && (
@@ -140,7 +140,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
               <span>Discount</span><span>-{formatCurrency(sale.discount_amount)}</span>
             </div>
           )}
-          <div className="flex justify-between text-gray-400">
+          <div className="flex justify-between text-slate-500">
             <span>Tax ({(TAX_RATE * 100).toFixed(0)}% GST)</span>
             <span>{formatCurrency(sale.tax_amount)}</span>
           </div>
@@ -149,8 +149,8 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
               <span>Surcharge</span><span>+{formatCurrency(surcharge)}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold text-white border-t border-gray-700 pt-1.5">
-            <span>Total</span><span className="text-indigo-400">{formatCurrency(sale.total)}</span>
+          <div className="flex justify-between font-bold text-slate-900 border-t border-blue-200 pt-1.5">
+            <span>Total</span><span className="text-blue-500">{formatCurrency(sale.total)}</span>
           </div>
         </div>
 
@@ -158,7 +158,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
         <div className="flex gap-2 pt-1 flex-wrap">
           <button
             onClick={() => handlePrint()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
           >
             <Printer size={14} /> Reprint
           </button>

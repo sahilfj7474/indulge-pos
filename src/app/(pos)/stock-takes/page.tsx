@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
@@ -85,16 +85,16 @@ export default function StockTakesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Stock Takes</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Count and reconcile your inventory</p>
+          <h1 className="text-xl font-bold text-slate-900">Stock Takes</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Count and reconcile your inventory</p>
         </div>
         {!activeTake && (
           <div className="flex gap-2">
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Notes (optional)"
-              className="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-48" />
+              className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48" />
             <button onClick={handleCreate} disabled={creating}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg">
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg">
               <Plus size={14} /> {creating ? 'Creating...' : 'New Stock Take'}
             </button>
           </div>
@@ -102,7 +102,7 @@ export default function StockTakesPage() {
         {activeTake && activeTake.status === 'in_progress' && (
           <div className="flex gap-2">
             <button onClick={() => setActiveTake(null)}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg">
+              className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg">
               Back
             </button>
             <button onClick={handleComplete} disabled={completing}
@@ -115,34 +115,34 @@ export default function StockTakesPage() {
 
       {!activeTake ? (
         /* Stock take list */
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Notes</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Completed</th>
-                <th className="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
+              <tr className="border-b border-blue-100">
+                <th className="text-left px-4 py-3 text-slate-500 font-medium">Date</th>
+                <th className="text-left px-4 py-3 text-slate-500 font-medium">Notes</th>
+                <th className="text-left px-4 py-3 text-slate-500 font-medium">Completed</th>
+                <th className="text-center px-4 py-3 text-slate-500 font-medium">Status</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="text-center py-12 text-gray-500">Loading...</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-slate-400">Loading...</td></tr>
               ) : takes.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-12 text-gray-500">No stock takes yet</td></tr>
+                <tr><td colSpan={5} className="text-center py-12 text-slate-400">No stock takes yet</td></tr>
               ) : takes.map(t => (
-                <tr key={t.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer" onClick={() => openTake(t)}>
-                  <td className="px-4 py-3 text-gray-300 text-xs">{formatDateTime(t.created_at)}</td>
-                  <td className="px-4 py-3 text-gray-400">{t.notes ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{t.completed_at ? formatDateTime(t.completed_at) : '—'}</td>
+                <tr key={t.id} className="border-b border-blue-200/50 hover:bg-blue-50/30 cursor-pointer" onClick={() => openTake(t)}>
+                  <td className="px-4 py-3 text-slate-600 text-xs">{formatDateTime(t.created_at)}</td>
+                  <td className="px-4 py-3 text-slate-500">{t.notes ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-500 text-xs">{t.completed_at ? formatDateTime(t.completed_at) : '—'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium',
                       t.status === 'in_progress' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-green-900/50 text-green-400')}>
                       {t.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400"><ChevronRight size={14} /></td>
+                  <td className="px-4 py-3 text-slate-500"><ChevronRight size={14} /></td>
                 </tr>
               ))}
             </tbody>
@@ -152,26 +152,26 @@ export default function StockTakesPage() {
         /* Stock take detail */
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-slate-500">
               {activeTake.status === 'in_progress' ? 'Enter your counted quantities below' : 'Completed stock take — read only'}
             </p>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Filter products..."
-              className="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 w-48" />
+              className="px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-48" />
           </div>
 
           {loadingItems ? (
-            <div className="text-center py-12 text-gray-500">Loading items...</div>
+            <div className="text-center py-12 text-slate-400">Loading items...</div>
           ) : (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">Product</th>
-                    <th className="text-left px-4 py-3 text-gray-400 font-medium">SKU</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Expected</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Counted</th>
-                    <th className="text-right px-4 py-3 text-gray-400 font-medium">Variance</th>
+                  <tr className="border-b border-blue-100">
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">Product</th>
+                    <th className="text-left px-4 py-3 text-slate-500 font-medium">SKU</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Expected</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Counted</th>
+                    <th className="text-right px-4 py-3 text-slate-500 font-medium">Variance</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,10 +179,10 @@ export default function StockTakesPage() {
                     const counted = parseInt(counts[item.id] ?? '')
                     const variance = isNaN(counted) ? item.variance : counted - item.expected_qty
                     return (
-                      <tr key={item.id} className={cn('border-b border-gray-800/50', variance !== 0 && !isNaN(counted) ? 'bg-yellow-900/10' : '')}>
-                        <td className="px-4 py-2 text-white">{item.product.name}</td>
-                        <td className="px-4 py-2 text-gray-400 text-xs font-mono">{item.product.sku ?? '—'}</td>
-                        <td className="px-4 py-2 text-right text-gray-400">{item.expected_qty}</td>
+                      <tr key={item.id} className={cn('border-b border-blue-200/50', variance !== 0 && !isNaN(counted) ? 'bg-yellow-900/10' : '')}>
+                        <td className="px-4 py-2 text-slate-900">{item.product.name}</td>
+                        <td className="px-4 py-2 text-slate-500 text-xs font-mono">{item.product.sku ?? '—'}</td>
+                        <td className="px-4 py-2 text-right text-slate-500">{item.expected_qty}</td>
                         <td className="px-4 py-2 text-right">
                           {activeTake.status === 'in_progress' ? (
                             <input
@@ -190,13 +190,13 @@ export default function StockTakesPage() {
                               min={0}
                               value={counts[item.id] ?? ''}
                               onChange={e => handleUpdateCount(item.id, e.target.value)}
-                              className="w-20 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-right text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-20 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-slate-900 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                           ) : (
-                            <span className="text-white">{item.counted_qty}</span>
+                            <span className="text-slate-900">{item.counted_qty}</span>
                           )}
                         </td>
-                        <td className={cn('px-4 py-2 text-right font-medium', variance > 0 ? 'text-green-400' : variance < 0 ? 'text-red-400' : 'text-gray-500')}>
+                        <td className={cn('px-4 py-2 text-right font-medium', variance > 0 ? 'text-green-400' : variance < 0 ? 'text-red-400' : 'text-slate-400')}>
                           {variance > 0 ? `+${variance}` : variance}
                         </td>
                       </tr>

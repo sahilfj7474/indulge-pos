@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
@@ -57,18 +57,18 @@ export default function Receipt({
   const taxLabel = `${(taxRate * 100).toFixed(0)}% VAT${taxInclusive ? ' (incl.)' : ''}`
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Receipt</h2>
+    <div className="fixed inset-0 bg-blue-950/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100">
+          <h2 className="text-lg font-semibold text-slate-900">Receipt</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePrint()}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <Printer size={14} /> Print
             </button>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
               <X size={18} />
             </button>
           </div>
@@ -103,9 +103,9 @@ export default function Receipt({
                       <span>{formatCurrency(lineTotal)}</span>
                     </div>
                     {item.discount_amount > 0 && (
-                      <p className="pl-2 text-gray-500">Disc: -{formatCurrency(item.discount_amount)}</p>
+                      <p className="pl-2 text-slate-400">Disc: -{formatCurrency(item.discount_amount)}</p>
                     )}
-                    {item.note && <p className="pl-2 text-gray-500 italic">* {item.note}</p>}
+                    {item.note && <p className="pl-2 text-slate-400 italic">* {item.note}</p>}
                   </div>
                 )
               })}

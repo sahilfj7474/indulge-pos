@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Category } from '@/types'
@@ -48,19 +48,19 @@ export default function CategoryModal({ category, onClose, onSaved }: Props) {
     <Modal title={category ? 'Edit Category' : 'Add Category'} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Name *</label>
+          <label className="block text-sm text-slate-500 mb-1">Name *</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             placeholder="e.g. Beverages"
             autoFocus
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Colour</label>
+          <label className="block text-sm text-slate-500 mb-2">Colour</label>
           <div className="flex gap-2 flex-wrap">
             {PRESET_COLORS.map(c => (
               <button
@@ -82,14 +82,14 @@ export default function CategoryModal({ category, onClose, onSaved }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
+            className="flex-1 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {saving ? 'Saving...' : category ? 'Update' : 'Add'}
           </button>

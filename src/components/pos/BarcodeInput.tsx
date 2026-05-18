@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef } from 'react'
 import { ScanLine } from 'lucide-react'
@@ -35,7 +35,7 @@ export default function BarcodeInput({ onScan, value, onChange }: Props) {
 
   return (
     <div className="relative">
-      <ScanLine size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <ScanLine size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
       <input
         ref={ref}
         type="text"
@@ -44,7 +44,7 @@ export default function BarcodeInput({ onScan, value, onChange }: Props) {
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         placeholder="Scan barcode or search products..."
-        className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+        className="w-full pl-9 pr-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
       />
     </div>
   )

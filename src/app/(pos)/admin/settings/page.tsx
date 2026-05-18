@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -81,22 +81,22 @@ export default function SettingsPage() {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
-  if (loading) return <div className="text-gray-500 text-sm">Loading settings...</div>
+  if (loading) return <div className="text-slate-400 text-sm">Loading settings...</div>
 
   return (
     <div className="space-y-4 max-w-lg">
       <div>
-        <h1 className="text-xl font-bold text-white">Settings</h1>
-        <p className="text-sm text-gray-400 mt-0.5">System-wide configuration</p>
+        <h1 className="text-xl font-bold text-slate-900">Settings</h1>
+        <p className="text-sm text-slate-500 mt-0.5">System-wide configuration</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-4">
         {SETTING_GROUPS.map(group => (
-          <div key={group.title} className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-300 border-b border-gray-800 pb-2">{group.title}</h2>
+          <div key={group.title} className="bg-white border border-blue-100 rounded-xl p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-slate-600 border-b border-blue-100 pb-2">{group.title}</h2>
             {group.fields.map(def => (
               <div key={def.key}>
-                <label className="block text-sm font-medium text-gray-300 mb-1">{def.label}</label>
+                <label className="block text-sm font-medium text-slate-600 mb-1">{def.label}</label>
                 {def.type === 'checkbox' ? (
                   <div className="flex items-center gap-3">
                     <input
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                       onChange={e => set(def.key, e.target.checked ? 'true' : 'false')}
                       className="w-4 h-4 accent-indigo-600"
                     />
-                    <label htmlFor={def.key} className="text-sm text-gray-400">
+                    <label htmlFor={def.key} className="text-sm text-slate-500">
                       {settings[def.key] === 'true' ? 'Yes — tax is included in product prices' : 'No — tax is added on top of price'}
                     </label>
                   </div>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
                     onChange={e => set(def.key, e.target.value)}
                     rows={3}
                     placeholder={def.placeholder}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+                    className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                   />
                 ) : (
                   <input
@@ -125,7 +125,7 @@ export default function SettingsPage() {
                     onChange={e => set(def.key, e.target.value)}
                     placeholder={def.placeholder}
                     step={def.type === 'number' ? '0.01' : undefined}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 )}
               </div>
@@ -133,11 +133,11 @@ export default function SettingsPage() {
           </div>
         ))}
 
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div className="bg-white border border-blue-100 rounded-xl p-5">
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Settings'}
@@ -148,7 +148,7 @@ export default function SettingsPage() {
       <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-4 text-sm text-amber-300">
         <p className="font-medium mb-1">To enable staff creation from the app:</p>
         <p className="text-amber-400/80">Add your Supabase Service Role key to <code className="bg-amber-900/40 px-1 rounded">.env.local</code>:</p>
-        <code className="block mt-2 bg-gray-900 text-gray-300 px-3 py-2 rounded text-xs">
+        <code className="block mt-2 bg-white text-slate-600 px-3 py-2 rounded text-xs">
           SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
         </code>
       </div>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
@@ -20,7 +20,7 @@ export default function ZReportModal({ data, type, onClose }: Props) {
   const handlePrint = useReactToPrint({ contentRef: ref })
 
   const Row = ({ label, value, bold }: { label: string; value: string; bold?: boolean }) => (
-    <div className={`flex justify-between py-0.5 ${bold ? 'font-bold text-sm' : 'text-xs text-gray-300'}`}>
+    <div className={`flex justify-between py-0.5 ${bold ? 'font-bold text-sm' : 'text-xs text-slate-600'}`}>
       <span>{label}</span><span>{value}</span>
     </div>
   )
@@ -30,7 +30,7 @@ export default function ZReportModal({ data, type, onClose }: Props) {
       <div className="flex justify-end mb-3">
         <button
           onClick={() => handlePrint()}
-          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg"
+          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg"
         >
           <Printer size={14} /> Print {type}-Report
         </button>
