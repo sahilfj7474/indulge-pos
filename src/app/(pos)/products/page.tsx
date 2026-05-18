@@ -175,7 +175,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-3 text-center">
                       <span className={cn(
                         'px-2 py-0.5 rounded-full text-xs font-medium',
-                        product.is_active ? 'bg-green-900/50 text-green-400' : 'bg-blue-50 text-slate-400'
+                        product.is_active ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-slate-400'
                       )}>
                         {product.is_active ? 'Active' : 'Inactive'}
                       </span>
@@ -196,7 +196,7 @@ export default function ProductsPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(product)}
-                          className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-blue-100 rounded transition-colors"
+                          className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-blue-100 rounded transition-colors"
                         >
                           <Trash2 size={13} />
                         </button>

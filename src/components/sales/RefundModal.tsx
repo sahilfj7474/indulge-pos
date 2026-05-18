@@ -95,7 +95,7 @@ export default function RefundModal({ sale, userId, onClose, onRefunded }: Props
         {refundTotal > 0 && (
           <div className="flex justify-between text-sm border-t border-blue-200 pt-3">
             <span className="text-slate-500">Refund amount</span>
-            <span className="text-red-400 font-bold">{formatCurrency(refundTotal)}</span>
+            <span className="text-red-500 font-bold">{formatCurrency(refundTotal)}</span>
           </div>
         )}
 

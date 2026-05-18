@@ -46,7 +46,7 @@ export default function HeldOrdersModal({ orders, onResume, onDeleted, onClose }
               </button>
               <button
                 onClick={() => handleDelete(order.id)}
-                className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
               >
                 <Trash2 size={14} />
               </button>

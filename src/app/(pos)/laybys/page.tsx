@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 
 const STATUS_STYLE: Record<string, string> = {
   active:    'bg-blue-900/50 text-blue-400',
-  completed: 'bg-green-900/50 text-green-400',
+  completed: 'bg-green-100 text-green-600',
   cancelled: 'bg-blue-100 text-slate-500',
 }
 
@@ -154,8 +154,8 @@ export default function LaybysPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{formatDateTime(l.created_at)}</td>
                 <td className="px-4 py-3 text-right text-slate-900">{formatCurrency(l.total)}</td>
-                <td className="px-4 py-3 text-right text-green-400">{formatCurrency(l.deposit_paid)}</td>
-                <td className="px-4 py-3 text-right font-bold text-red-400">{formatCurrency(l.balance_due)}</td>
+                <td className="px-4 py-3 text-right text-green-600">{formatCurrency(l.deposit_paid)}</td>
+                <td className="px-4 py-3 text-right font-bold text-red-500">{formatCurrency(l.balance_due)}</td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLE[l.status])}>
                     {l.status}
@@ -169,7 +169,7 @@ export default function LaybysPage() {
                         <CreditCard size={11} /> Pay
                       </button>
                       <button onClick={() => handleCancel(l)}
-                        className="p-1 text-slate-400 hover:text-red-400"><X size={13} /></button>
+                        className="p-1 text-slate-400 hover:text-red-500"><X size={13} /></button>
                     </div>
                   )}
                 </td>
@@ -206,7 +206,7 @@ export default function LaybysPage() {
                       placeholder="Price"
                       className="w-20 px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     {laybyItems.length > 1 && (
-                      <button onClick={() => setLaybyItems(prev => prev.filter((_,j)=>j!==i))} className="text-slate-400 hover:text-red-400"><X size={14} /></button>
+                      <button onClick={() => setLaybyItems(prev => prev.filter((_,j)=>j!==i))} className="text-slate-400 hover:text-red-500"><X size={14} /></button>
                     )}
                   </div>
                 ))}
@@ -254,7 +254,7 @@ export default function LaybysPage() {
           <div className="space-y-4">
             <div className="text-sm">
               <p className="text-slate-500">Customer: <span className="text-slate-900">{(payingLayby.customer as unknown as { full_name: string })?.full_name}</span></p>
-              <p className="text-slate-500 mt-1">Balance Due: <span className="text-red-400 font-bold">{formatCurrency(payingLayby.balance_due)}</span></p>
+              <p className="text-slate-500 mt-1">Balance Due: <span className="text-red-500 font-bold">{formatCurrency(payingLayby.balance_due)}</span></p>
             </div>
             <div>
               <label className="block text-sm text-slate-500 mb-1">Amount</label>

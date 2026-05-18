@@ -61,7 +61,7 @@ export default function SetStockModal({ item, userId, onClose, onSaved }: Props)
             placeholder="0"
           />
           {qty !== '' && diff !== 0 && (
-            <p className={cn('text-xs mt-1', diff > 0 ? 'text-green-400' : 'text-red-400')}>
+            <p className={cn('text-xs mt-1', diff > 0 ? 'text-green-600' : 'text-red-500')}>
               {diff > 0 ? `+${diff}` : diff} from current ({item.quantity} → {newQty})
             </p>
           )}

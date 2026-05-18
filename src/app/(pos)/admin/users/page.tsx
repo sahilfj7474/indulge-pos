@@ -70,14 +70,14 @@ export default function UsersPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-500">{u.location?.name ?? '—'}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className={cn('px-2 py-0.5 rounded-full text-xs', u.is_active ? 'bg-green-900/50 text-green-400' : 'bg-blue-50 text-slate-400')}>
+                  <span className={cn('px-2 py-0.5 rounded-full text-xs', u.is_active ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-slate-400')}>
                     {u.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <button onClick={() => setEditing(u)} className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-blue-100 rounded transition-colors"><Pencil size={13} /></button>
-                    <button onClick={() => toggleActive(u)} className={cn('p-1.5 rounded transition-colors', u.is_active ? 'text-slate-500 hover:text-red-400 hover:bg-blue-100' : 'text-slate-500 hover:text-green-400 hover:bg-blue-100')}>
+                    <button onClick={() => toggleActive(u)} className={cn('p-1.5 rounded transition-colors', u.is_active ? 'text-slate-500 hover:text-red-500 hover:bg-blue-100' : 'text-slate-500 hover:text-green-600 hover:bg-blue-100')}>
                       {u.is_active ? <UserX size={13} /> : <UserCheck size={13} />}
                     </button>
                   </div>

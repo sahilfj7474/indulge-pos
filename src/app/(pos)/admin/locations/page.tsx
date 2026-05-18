@@ -60,7 +60,7 @@ export default function LocationsPage() {
                 </button>
                 <button onClick={() => toggleActive(loc)}
                   className={cn('px-2 py-0.5 rounded-full text-xs font-medium transition-colors cursor-pointer',
-                    loc.is_active ? 'bg-green-900/50 text-green-400 hover:bg-red-900/50 hover:text-red-400' : 'bg-blue-50 text-slate-400 hover:bg-green-900/50 hover:text-green-400')}>
+                    loc.is_active ? 'bg-green-100 text-green-600 hover:bg-red-100 hover:text-red-500' : 'bg-blue-50 text-slate-400 hover:bg-green-100 hover:text-green-600')}>
                   {loc.is_active ? 'Active' : 'Inactive'}
                 </button>
               </div>

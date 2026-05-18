@@ -23,9 +23,9 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  completed:      'bg-green-900/50 text-green-400',
-  voided:         'bg-red-900/50 text-red-400',
-  refunded:       'bg-yellow-900/50 text-yellow-400',
+  completed:      'bg-green-100 text-green-600',
+  voided:         'bg-red-100 text-red-500',
+  refunded:       'bg-yellow-100 text-yellow-700',
   partial_refund: 'bg-orange-900/50 text-orange-400',
 }
 
@@ -136,7 +136,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
             <span>Subtotal</span><span>{formatCurrency(sale.subtotal)}</span>
           </div>
           {sale.discount_amount > 0 && (
-            <div className="flex justify-between text-green-400">
+            <div className="flex justify-between text-green-600">
               <span>Discount</span><span>-{formatCurrency(sale.discount_amount)}</span>
             </div>
           )}
@@ -145,7 +145,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
             <span>{formatCurrency(sale.tax_amount)}</span>
           </div>
           {surcharge > 0 && (
-            <div className="flex justify-between text-yellow-400">
+            <div className="flex justify-between text-yellow-700">
               <span>Surcharge</span><span>+{formatCurrency(surcharge)}</span>
             </div>
           )}
@@ -165,7 +165,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
           {canRefund && (sale.status === 'completed' || sale.status === 'partial_refund') && (
             <button
               onClick={() => setShowRefund(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-900/40 hover:bg-yellow-900/70 text-yellow-400 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-900/40 hover:bg-yellow-900/70 text-yellow-700 text-sm font-medium rounded-lg transition-colors"
             >
               <RotateCcw size={14} /> Refund Items
             </button>
@@ -173,7 +173,7 @@ export default function SaleDetailModal({ sale, userId, canVoid, canRefund, onCl
           {canVoid && sale.status === 'completed' && (
             <button
               onClick={handleVoid}
-              className="flex items-center gap-2 px-4 py-2 bg-red-900/40 hover:bg-red-900/70 text-red-400 text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-900/70 text-red-500 text-sm font-medium rounded-lg transition-colors"
             >
               <Ban size={14} /> Void Sale
             </button>

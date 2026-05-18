@@ -14,8 +14,8 @@ import { Plus, CheckCircle, X, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const STATUS_STYLE: Record<string, string> = {
-  pending:   'bg-yellow-900/50 text-yellow-400',
-  completed: 'bg-green-900/50 text-green-400',
+  pending:   'bg-yellow-100 text-yellow-700',
+  completed: 'bg-green-100 text-green-600',
   cancelled: 'bg-blue-100 text-slate-500',
 }
 
@@ -131,11 +131,11 @@ export default function StockTransfersPage() {
                   {t.status === 'pending' && (
                     <div className="flex items-center gap-2 justify-end">
                       <button onClick={() => handleComplete(t)}
-                        className="flex items-center gap-1 px-2 py-1 bg-green-800 hover:bg-green-700 text-green-300 text-xs rounded-lg">
+                        className="flex items-center gap-1 px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg">
                         <CheckCircle size={11} /> Complete
                       </button>
                       <button onClick={() => handleCancel(t)}
-                        className="p-1 text-slate-400 hover:text-red-400"><X size={13} /></button>
+                        className="p-1 text-slate-400 hover:text-red-500"><X size={13} /></button>
                     </div>
                   )}
                 </td>
@@ -178,7 +178,7 @@ export default function StockTransfersPage() {
                     <input type="number" min={1} value={item.quantity} onChange={e => setTfItems(prev => { const u=[...prev]; u[i]={...u[i],quantity:parseInt(e.target.value)||1}; return u })}
                       className="w-16 px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm text-center focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     {tfItems.length > 1 && (
-                      <button onClick={() => setTfItems(prev => prev.filter((_,j)=>j!==i))} className="text-slate-400 hover:text-red-400"><X size={14} /></button>
+                      <button onClick={() => setTfItems(prev => prev.filter((_,j)=>j!==i))} className="text-slate-400 hover:text-red-500"><X size={14} /></button>
                     )}
                   </div>
                 ))}

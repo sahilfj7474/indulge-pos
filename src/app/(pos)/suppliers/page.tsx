@@ -98,14 +98,14 @@ export default function SuppliersPage() {
                 <td className="px-4 py-3 text-slate-500">{s.phone ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-500">{s.email ?? '—'}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? 'bg-green-900/50 text-green-400' : 'bg-blue-100 text-slate-500'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-slate-500'}`}>
                     {s.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2 justify-end">
                     <button onClick={() => openEdit(s)} className="text-slate-500 hover:text-blue-500"><Edit2 size={14} /></button>
-                    <button onClick={() => handleDelete(s)} className="text-slate-500 hover:text-red-400"><Trash2 size={14} /></button>
+                    <button onClick={() => handleDelete(s)} className="text-slate-500 hover:text-red-500"><Trash2 size={14} /></button>
                   </div>
                 </td>
               </tr>

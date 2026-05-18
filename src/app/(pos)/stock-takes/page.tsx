@@ -138,7 +138,7 @@ export default function StockTakesPage() {
                   <td className="px-4 py-3 text-slate-500 text-xs">{t.completed_at ? formatDateTime(t.completed_at) : '—'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium',
-                      t.status === 'in_progress' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-green-900/50 text-green-400')}>
+                      t.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-600')}>
                       {t.status.replace('_', ' ')}
                     </span>
                   </td>
@@ -196,7 +196,7 @@ export default function StockTakesPage() {
                             <span className="text-slate-900">{item.counted_qty}</span>
                           )}
                         </td>
-                        <td className={cn('px-4 py-2 text-right font-medium', variance > 0 ? 'text-green-400' : variance < 0 ? 'text-red-400' : 'text-slate-400')}>
+                        <td className={cn('px-4 py-2 text-right font-medium', variance > 0 ? 'text-green-600' : variance < 0 ? 'text-red-500' : 'text-slate-400')}>
                           {variance > 0 ? `+${variance}` : variance}
                         </td>
                       </tr>

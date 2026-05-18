@@ -92,10 +92,10 @@ export default function RegisterPage() {
       </div>
 
       {/* Status card */}
-      <div className={`rounded-xl border p-6 ${openReg ? 'bg-green-900/20 border-green-700/40' : 'bg-white border-blue-100'}`}>
+      <div className={`rounded-xl border p-6 ${openReg ? 'bg-green-50 border-green-200' : 'bg-white border-blue-100'}`}>
         <div className="flex items-center gap-3 mb-4">
           {openReg ? (
-            <Unlock size={20} className="text-green-400" />
+            <Unlock size={20} className="text-green-600" />
           ) : (
             <Lock size={20} className="text-slate-500" />
           )}
@@ -117,8 +117,8 @@ export default function RegisterPage() {
               </div>
               <div>
                 <p className="text-slate-500">Cash In / Out</p>
-                <p className="text-green-400">+{formatCurrency(openReg.cash_in)}</p>
-                <p className="text-red-400">-{formatCurrency(openReg.cash_out)}</p>
+                <p className="text-green-600">+{formatCurrency(openReg.cash_in)}</p>
+                <p className="text-red-500">-{formatCurrency(openReg.cash_out)}</p>
               </div>
             </div>
 
@@ -132,7 +132,7 @@ export default function RegisterPage() {
             </div>
 
             {showMovement && (
-              <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+              <div className="bg-white border border-green-200 rounded-lg p-4 space-y-3">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMovementType('in')}
@@ -165,7 +165,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="border-t border-blue-200 pt-4">
+            <div className="border-t border-green-200 pt-4">
               <label className="block text-sm text-slate-500 mb-2">Closing Float (counted cash)</label>
               <div className="flex gap-3">
                 <input
@@ -175,7 +175,7 @@ export default function RegisterPage() {
                   value={closingFloat}
                   onChange={e => setClosingFloat(e.target.value)}
                   placeholder="0.00"
-                  className="flex-1 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 bg-white border border-green-200 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
                 />
                 <button
                   onClick={handleClose}
@@ -233,7 +233,7 @@ export default function RegisterPage() {
                     <td className="px-4 py-3 text-right text-slate-900">{formatCurrency(reg.opening_float)}</td>
                     <td className="px-4 py-3 text-right text-slate-900">{reg.closing_float != null ? formatCurrency(reg.closing_float) : '—'}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'open' ? 'bg-green-900/50 text-green-400' : 'bg-blue-100 text-slate-500'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${reg.status === 'open' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-slate-500'}`}>
                         {reg.status}
                       </span>
                     </td>

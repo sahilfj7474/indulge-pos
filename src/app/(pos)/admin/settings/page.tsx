@@ -145,9 +145,9 @@ export default function SettingsPage() {
         </div>
       </form>
 
-      <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl p-4 text-sm text-amber-300">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
         <p className="font-medium mb-1">To enable staff creation from the app:</p>
-        <p className="text-amber-400/80">Add your Supabase Service Role key to <code className="bg-amber-900/40 px-1 rounded">.env.local</code>:</p>
+        <p className="text-amber-600">Add your Supabase Service Role key to <code className="bg-amber-100 px-1 rounded">.env.local</code>:</p>
         <code className="block mt-2 bg-white text-slate-600 px-3 py-2 rounded text-xs">
           SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
         </code>

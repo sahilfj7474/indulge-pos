@@ -90,9 +90,9 @@ export default function InventoryPage() {
             </select>
           )}
           {lowStockCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-900/40 border border-amber-700 rounded-lg">
-              <AlertTriangle size={14} className="text-amber-400" />
-              <span className="text-sm text-amber-400">{lowStockCount} low stock</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-lg">
+              <AlertTriangle size={14} className="text-amber-600" />
+              <span className="text-sm text-amber-600">{lowStockCount} low stock</span>
             </div>
           )}
         </div>
@@ -164,7 +164,7 @@ export default function InventoryPage() {
                 ) : filtered.map(item => {
                   const isLow = item.quantity < item.low_stock_threshold
                   return (
-                    <tr key={item.id} className={cn('border-b border-blue-200/50 transition-colors', isLow ? 'bg-amber-950/10' : 'hover:bg-blue-50/30')}>
+                    <tr key={item.id} className={cn('border-b border-blue-200/50 transition-colors', isLow ? 'bg-amber-50/40' : 'hover:bg-blue-50/30')}>
                       <td className="px-4 py-3 font-medium text-slate-900">{item.product?.name}</td>
                       <td className="px-4 py-3">
                         {item.product?.category ? (
@@ -173,17 +173,17 @@ export default function InventoryPage() {
                           </span>
                         ) : <span className="text-slate-400">—</span>}
                       </td>
-                      <td className={cn('px-4 py-3 text-right font-bold text-lg', isLow ? 'text-amber-400' : 'text-slate-900')}>
+                      <td className={cn('px-4 py-3 text-right font-bold text-lg', isLow ? 'text-amber-600' : 'text-slate-900')}>
                         {item.quantity}
                       </td>
                       <td className="px-4 py-3 text-right text-slate-500">{item.low_stock_threshold}</td>
                       <td className="px-4 py-3 text-center">
                         {isLow ? (
-                          <span className="flex items-center justify-center gap-1 text-amber-400 text-xs">
+                          <span className="flex items-center justify-center gap-1 text-amber-600 text-xs">
                             <AlertTriangle size={11} /> Low
                           </span>
                         ) : (
-                          <span className="text-green-400 text-xs">OK</span>
+                          <span className="text-green-600 text-xs">OK</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -234,7 +234,7 @@ export default function InventoryPage() {
                   <td className="px-4 py-3 text-slate-900">{(adj as any).product?.name}</td>
                   <td className="px-4 py-3 text-slate-500">{(adj as any).user?.full_name}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={cn('font-bold', adj.quantity_change > 0 ? 'text-green-400' : 'text-red-400')}>
+                    <span className={cn('font-bold', adj.quantity_change > 0 ? 'text-green-600' : 'text-red-500')}>
                       {adj.quantity_change > 0 ? '+' : ''}{adj.quantity_change}
                     </span>
                   </td>

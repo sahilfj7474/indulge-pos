@@ -128,7 +128,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
               </div>
 
               {method === 'account' && !hasCustomer && (
-                <p className="text-xs text-amber-400">Add a customer to the cart to charge to account.</p>
+                <p className="text-xs text-amber-600">Add a customer to the cart to charge to account.</p>
               )}
 
               {/* Cash tendered */}
@@ -146,7 +146,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                   {parseFloat(tendered || '0') >= total && (
                     <div className="flex justify-between mt-2 text-sm">
                       <span className="text-slate-500">Change</span>
-                      <span className="text-green-400 font-semibold">{formatCurrency(change)}</span>
+                      <span className="text-green-600 font-semibold">{formatCurrency(change)}</span>
                     </div>
                   )}
                 </div>
@@ -195,7 +195,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                 </div>
               </div>
               {split1Method === split2Method && split1 > 0 && (
-                <p className="text-xs text-red-400">Select different methods for each payment.</p>
+                <p className="text-xs text-red-500">Select different methods for each payment.</p>
               )}
             </div>
           )}

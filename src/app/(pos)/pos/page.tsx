@@ -286,7 +286,7 @@ export default function POSPage() {
           {heldOrders.length > 0 && (
             <button
               onClick={() => setShowHeldOrders(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/50 text-amber-400 text-xs font-medium rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-600 text-xs font-medium rounded-lg transition-colors"
             >
               <PauseCircle size={14} />
               {heldOrders.length} Held

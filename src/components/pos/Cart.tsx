@@ -126,7 +126,7 @@ export default function Cart({
                 >
                   <MessageSquare size={13} />
                 </button>
-                <button onClick={() => onRemove(i)} className="text-slate-400 hover:text-red-400">
+                <button onClick={() => onRemove(i)} className="text-slate-400 hover:text-red-500">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -172,9 +172,9 @@ export default function Cart({
         <div className="px-3 py-2 border-t border-blue-100 space-y-2">
           {/* Auto-applied promo badge */}
           {appliedPromoName && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-800/50 rounded-lg">
-              <Zap size={11} className="text-green-400" />
-              <span className="text-xs text-green-400">Promo: {appliedPromoName}</span>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 border border-green-800/50 rounded-lg">
+              <Zap size={11} className="text-green-600" />
+              <span className="text-xs text-green-600">Promo: {appliedPromoName}</span>
             </div>
           )}
 
@@ -241,7 +241,7 @@ export default function Cart({
           <span>Subtotal</span><span>{formatCurrency(subtotal)}</span>
         </div>
         {discountAmount > 0 && (
-          <div className="flex justify-between text-sm text-green-400">
+          <div className="flex justify-between text-sm text-green-600">
             <span>Discount</span><span>-{formatCurrency(discountAmount)}</span>
           </div>
         )}
@@ -254,7 +254,7 @@ export default function Cart({
           <span>{taxLabel}</span><span>{formatCurrency(taxAmount)}</span>
         </div>
         {surchargeAmount > 0 && (
-          <div className="flex justify-between text-sm text-yellow-400">
+          <div className="flex justify-between text-sm text-yellow-700">
             <span>Surcharge</span><span>+{formatCurrency(surchargeAmount)}</span>
           </div>
         )}
@@ -278,7 +278,7 @@ export default function Cart({
             onClick={onHold}
             disabled={items.length === 0}
             title="Hold order"
-            className="px-3 py-2 bg-blue-50 hover:bg-amber-900/40 disabled:opacity-40 text-amber-400 text-sm font-medium rounded-lg transition-colors"
+            className="px-3 py-2 bg-blue-50 hover:bg-amber-50 disabled:opacity-40 text-amber-600 text-sm font-medium rounded-lg transition-colors"
           >
             <PauseCircle size={16} />
           </button>

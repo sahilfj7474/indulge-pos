@@ -213,7 +213,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
               </button>
               {imagePreview && (
                 <button type="button" onClick={() => { setImagePreview(null); setImageFile(null); setImageUrl(null) }}
-                  className="ml-2 px-3 py-1.5 bg-blue-50 hover:bg-red-900/40 text-red-400 text-xs font-medium rounded-lg transition-colors">
+                  className="ml-2 px-3 py-1.5 bg-blue-50 hover:bg-red-100 text-red-500 text-xs font-medium rounded-lg transition-colors">
                   Remove
                 </button>
               )}
@@ -320,7 +320,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
                         }}
                         className="w-20 px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       <button type="button" onClick={() => setVariants(variants.filter((_, j) => j !== i))}
-                        className="text-slate-400 hover:text-red-400">
+                        className="text-slate-400 hover:text-red-500">
                         <Trash2 size={13} />
                       </button>
                     </>
@@ -335,7 +335,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
                           await deleteVariant((v as ProductVariant).id)
                           setVariants(variants.filter((_, j) => j !== i))
                         }}
-                        className="text-slate-400 hover:text-red-400">
+                        className="text-slate-400 hover:text-red-500">
                         <Trash2 size={13} />
                       </button>
                     </>

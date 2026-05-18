@@ -111,7 +111,7 @@ export default function AdjustmentModal({ item, userId, onClose, onSaved }: Prop
           />
           {change > 0 && (
             <p className="text-xs text-slate-500 mt-1">
-              New stock level: <span className={cn('font-semibold', newQty < item.low_stock_threshold ? 'text-red-400' : 'text-green-400')}>{newQty}</span>
+              New stock level: <span className={cn('font-semibold', newQty < item.low_stock_threshold ? 'text-red-500' : 'text-green-600')}>{newQty}</span>
             </p>
           )}
         </div>

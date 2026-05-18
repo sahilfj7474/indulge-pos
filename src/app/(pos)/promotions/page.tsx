@@ -133,7 +133,7 @@ export default function PromotionsPage() {
               <tr key={p.id} className="border-b border-blue-200/50 hover:bg-blue-50/30">
                 <td className="px-4 py-3 font-medium text-slate-900">
                   <div className="flex items-center gap-2">
-                    {isLive(p) && <Zap size={12} className="text-green-400" />}
+                    {isLive(p) && <Zap size={12} className="text-green-600" />}
                     {p.name}
                   </div>
                 </td>
@@ -153,8 +153,8 @@ export default function PromotionsPage() {
                 </td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium',
-                    isLive(p) ? 'bg-green-900/50 text-green-400' :
-                    p.is_active ? 'bg-amber-900/40 text-amber-400' : 'bg-blue-50 text-slate-400'
+                    isLive(p) ? 'bg-green-100 text-green-600' :
+                    p.is_active ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-slate-400'
                   )}>
                     {isLive(p) ? 'Live' : p.is_active ? 'Scheduled' : 'Off'}
                   </span>
@@ -163,14 +163,14 @@ export default function PromotionsPage() {
                   <div className="flex items-center justify-end gap-1">
                     <button onClick={() => toggleActive(p)} title={p.is_active ? 'Disable' : 'Enable'}
                       className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-blue-100 rounded transition-colors">
-                      {p.is_active ? <ToggleRight size={15} className="text-green-400" /> : <ToggleLeft size={15} />}
+                      {p.is_active ? <ToggleRight size={15} className="text-green-600" /> : <ToggleLeft size={15} />}
                     </button>
                     <button onClick={() => openEdit(p)}
                       className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-blue-100 rounded transition-colors">
                       <Pencil size={13} />
                     </button>
                     <button onClick={() => handleDelete(p)}
-                      className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-blue-100 rounded transition-colors">
+                      className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-blue-100 rounded transition-colors">
                       <Trash2 size={13} />
                     </button>
                   </div>

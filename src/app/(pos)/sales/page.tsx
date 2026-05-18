@@ -10,9 +10,9 @@ import { Search, Download } from 'lucide-react'
 import { canVoidSale } from '@/lib/permissions'
 
 const STATUS_STYLES: Record<string, string> = {
-  completed:      'bg-green-900/50 text-green-400',
-  voided:         'bg-red-900/50 text-red-400',
-  refunded:       'bg-yellow-900/50 text-yellow-400',
+  completed:      'bg-green-100 text-green-600',
+  voided:         'bg-red-100 text-red-500',
+  refunded:       'bg-yellow-100 text-yellow-700',
   partial_refund: 'bg-orange-900/50 text-orange-400',
 }
 

@@ -12,9 +12,9 @@ import { getOrCreateAccount, recordAccountPayment, getAccountTransactions, Custo
 import toast from 'react-hot-toast'
 
 const STATUS_STYLES: Record<string, string> = {
-  completed:      'bg-green-900/50 text-green-400',
-  voided:         'bg-red-900/50 text-red-400',
-  refunded:       'bg-yellow-900/50 text-yellow-400',
+  completed:      'bg-green-100 text-green-600',
+  voided:         'bg-red-100 text-red-500',
+  refunded:       'bg-yellow-100 text-yellow-700',
   partial_refund: 'bg-orange-900/50 text-orange-400',
 }
 
@@ -177,7 +177,7 @@ export default function CustomersPage() {
                       <BookUser size={13} />
                     </button>
                     <button title="Adjust loyalty points" onClick={() => setLoyaltyCustomer(c)}
-                      className="p-1.5 text-slate-500 hover:text-yellow-400 hover:bg-blue-100 rounded transition-colors">
+                      className="p-1.5 text-slate-500 hover:text-yellow-700 hover:bg-blue-100 rounded transition-colors">
                       <Gift size={13} />
                     </button>
                     <button onClick={() => { setEditing(c); setShowModal(true) }}
@@ -261,7 +261,7 @@ export default function CustomersPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-slate-500">Outstanding Balance</p>
-                <p className={`text-xl font-bold ${account.balance > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                <p className={`text-xl font-bold ${account.balance > 0 ? 'text-red-500' : 'text-green-600'}`}>
                   {formatCurrency(account.balance)}
                 </p>
               </div>
@@ -306,7 +306,7 @@ export default function CustomersPage() {
                     <tr key={tx.id} className="border-t border-blue-200/50">
                       <td className="px-3 py-2 text-slate-500">{formatDate(tx.created_at)}</td>
                       <td className="px-3 py-2">
-                        <span className={tx.type === 'charge' ? 'text-red-400' : 'text-green-400'}>
+                        <span className={tx.type === 'charge' ? 'text-red-500' : 'text-green-600'}>
                           {tx.type === 'charge' ? 'Charge' : 'Payment'}
                         </span>
                       </td>
