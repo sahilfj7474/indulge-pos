@@ -9,10 +9,11 @@ interface Props {
   onChange: (v: string) => void
 }
 
+const INTERACTIVE = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A']
+
 export default function BarcodeInput({ onScan, value, onChange }: Props) {
   const ref = useRef<HTMLInputElement>(null)
 
-  // Keep barcode input focused so scanner events are always captured
   useEffect(() => {
     ref.current?.focus()
   }, [])
@@ -21,6 +22,14 @@ export default function BarcodeInput({ onScan, value, onChange }: Props) {
     if (e.key === 'Enter' && value.trim()) {
       onScan(value.trim())
       onChange('')
+    }
+  }
+
+  function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
+    // Only reclaim focus if the user clicked on non-interactive empty space
+    const next = e.relatedTarget as HTMLElement | null
+    if (!next || (!INTERACTIVE.includes(next.tagName) && !next.closest('[role="button"]'))) {
+      setTimeout(() => ref.current?.focus(), 50)
     }
   }
 
@@ -33,7 +42,7 @@ export default function BarcodeInput({ onScan, value, onChange }: Props) {
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={() => setTimeout(() => ref.current?.focus(), 100)}
+        onBlur={handleBlur}
         placeholder="Scan barcode or search products..."
         className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
       />
