@@ -93,6 +93,51 @@ export async function adjustInventory(params: {
   })
 }
 
+export async function setStockLevel(
+  productId: string,
+  locationId: string,
+  userId: string,
+  newQuantity: number,
+  reason = 'Manual stock set'
+): Promise<void> {
+  const supabase = createClient()
+  const { data: inv } = await supabase
+    .from('inventory')
+    .select('quantity')
+    .eq('product_id', productId)
+    .eq('location_id', locationId)
+    .maybeSingle()
+
+  const oldQty = inv?.quantity ?? 0
+  const change = newQuantity - oldQty
+
+  await supabase.from('inventory').upsert(
+    { product_id: productId, location_id: locationId, quantity: newQuantity, updated_at: new Date().toISOString() },
+    { onConflict: 'product_id,location_id' }
+  )
+
+  if (change !== 0) {
+    await supabase.from('inventory_adjustments').insert({
+      product_id: productId,
+      location_id: locationId,
+      user_id: userId,
+      quantity_change: change,
+      reason,
+    })
+  }
+}
+
+export async function getStockByProduct(productId: string): Promise<{ location_id: string; location_name: string; quantity: number; low_stock_threshold: number }[]> {
+  const supabase = createClient()
+  const { data: locations } = await supabase.from('locations').select('id, name').eq('is_active', true)
+  const { data: rows } = await supabase.from('inventory').select('location_id, quantity, low_stock_threshold').eq('product_id', productId)
+  const invMap = new Map((rows ?? []).map((r: any) => [r.location_id, r]))
+  return (locations ?? []).map((l: any) => {
+    const inv = invMap.get(l.id)
+    return { location_id: l.id, location_name: l.name, quantity: inv?.quantity ?? 0, low_stock_threshold: inv?.low_stock_threshold ?? 10 }
+  })
+}
+
 export async function updateLowStockThreshold(
   productId: string,
   locationId: string,

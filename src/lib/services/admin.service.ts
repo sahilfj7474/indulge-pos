@@ -39,19 +39,40 @@ export async function getAllProducts(): Promise<Product[]> {
   return (data ?? []) as unknown as Product[]
 }
 
-export async function createProduct(data: {
-  name: string
-  sku: string | null
-  barcode: string | null
-  category_id: string | null
-  price: number
-  cost: number | null
-  is_active: boolean
-  image_url?: string | null
-}): Promise<Product> {
+export async function createProduct(
+  data: {
+    name: string
+    sku: string | null
+    barcode: string | null
+    category_id: string | null
+    price: number
+    cost: number | null
+    is_active: boolean
+    image_url?: string | null
+  },
+  initialStock?: { location_id: string; quantity: number }[]
+): Promise<Product> {
   const supabase = createClient()
-  const { data: created, error } = await supabase.from('products').insert(data).select('*, category:categories(*)').single()
+  const { data: created, error } = await supabase
+    .from('products')
+    .insert(data)
+    .select('*, category:categories(*)')
+    .single()
   if (error) throw new Error(error.message)
+
+  // Initialize inventory for all locations (default 0, or provided quantities)
+  const { data: locations } = await supabase.from('locations').select('id').eq('is_active', true)
+  if (locations && locations.length > 0) {
+    const stockMap = new Map((initialStock ?? []).map(s => [s.location_id, s.quantity]))
+    await supabase.from('inventory').insert(
+      locations.map((loc: { id: string }) => ({
+        product_id: created.id,
+        location_id: loc.id,
+        quantity: stockMap.get(loc.id) ?? 0,
+      }))
+    )
+  }
+
   return created as unknown as Product
 }
 

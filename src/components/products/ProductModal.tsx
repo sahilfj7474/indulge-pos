@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Product, Category } from '@/types'
-import { createProduct, updateProduct } from '@/lib/services/admin.service'
+import { useState, useRef, useEffect } from 'react'
+import { Product, Category, Location } from '@/types'
+import { createProduct, updateProduct, getLocations } from '@/lib/services/admin.service'
+import { getStockByProduct, setStockLevel } from '@/lib/services/inventory.service'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/auth/context'
 import Modal from '@/components/ui/Modal'
-import { ImagePlus, X } from 'lucide-react'
+import { ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Props {
@@ -16,6 +18,7 @@ interface Props {
 }
 
 export default function ProductModal({ product, categories, onClose, onSaved }: Props) {
+  const { user } = useAuth()
   const [form, setForm] = useState({
     name: product?.name ?? '',
     sku: product?.sku ?? '',
@@ -30,6 +33,38 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image_url ?? null)
   const [saving, setSaving] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const [locations, setLocations] = useState<Location[]>([])
+  // Map of location_id -> quantity string (for the input)
+  const [stockInputs, setStockInputs] = useState<Record<string, string>>({})
+  // Original quantities for edit mode (to detect changes)
+  const [originalStock, setOriginalStock] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    async function loadLocations() {
+      const locs = await getLocations()
+      const active = locs.filter(l => l.is_active !== false)
+      setLocations(active)
+
+      if (product) {
+        const stockRows = await getStockByProduct(product.id)
+        const inputs: Record<string, string> = {}
+        const originals: Record<string, number> = {}
+        for (const loc of active) {
+          const row = stockRows.find(r => r.location_id === loc.id)
+          inputs[loc.id] = (row?.quantity ?? 0).toString()
+          originals[loc.id] = row?.quantity ?? 0
+        }
+        setStockInputs(inputs)
+        setOriginalStock(originals)
+      } else {
+        const inputs: Record<string, string> = {}
+        for (const loc of active) inputs[loc.id] = '0'
+        setStockInputs(inputs)
+      }
+    }
+    loadLocations()
+  }, [product?.id])
 
   function set(field: string, value: string | boolean) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -75,9 +110,25 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
       if (product) {
         const uploadedUrl = await uploadImage(product.id)
         await updateProduct(product.id, { ...payload, image_url: uploadedUrl })
+
+        // Apply stock level changes where quantity differs from original
+        const userId = user?.id ?? ''
+        await Promise.all(
+          locations.map(async loc => {
+            const newQty = parseInt(stockInputs[loc.id] ?? '0') || 0
+            const oldQty = originalStock[loc.id] ?? 0
+            if (newQty !== oldQty) {
+              await setStockLevel(product.id, loc.id, userId, newQty, 'Manual stock set via product edit')
+            }
+          })
+        )
         toast.success('Product updated')
       } else {
-        const created = await createProduct(payload)
+        const initialStock = locations.map(loc => ({
+          location_id: loc.id,
+          quantity: parseInt(stockInputs[loc.id] ?? '0') || 0,
+        }))
+        const created = await createProduct(payload, initialStock)
         if (imageFile && created) {
           const uploadedUrl = await uploadImage(created.id)
           if (uploadedUrl) await updateProduct(created.id, { image_url: uploadedUrl })
@@ -94,7 +145,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
   }
 
   return (
-    <Modal title={product ? 'Edit Product' : 'Add Product'} onClose={onClose}>
+    <Modal title={product ? 'Edit Product' : 'Add Product'} onClose={onClose} maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* Image upload */}
@@ -169,6 +220,30 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Optional" />
           </div>
         </div>
+
+        {/* Stock on Hand per location */}
+        {locations.length > 0 && (
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
+              Stock on Hand {product ? '(edit to set new level)' : '(opening stock)'}
+            </label>
+            <div className="space-y-2">
+              {locations.map(loc => (
+                <div key={loc.id} className="flex items-center gap-3">
+                  <span className="flex-1 text-sm text-gray-300 truncate">{loc.name}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stockInputs[loc.id] ?? '0'}
+                    onChange={e => setStockInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                    className="w-24 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs text-gray-600 w-8">units</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-indigo-600" />

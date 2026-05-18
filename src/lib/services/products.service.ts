@@ -11,9 +11,8 @@ export async function getActiveProducts(locationId: string): Promise<Product[]> 
   const supabase = createClient()
   const { data } = await supabase
     .from('products')
-    .select('*, category:categories(*), inventory!inner(quantity, location_id)')
+    .select('*, category:categories(*)')
     .eq('is_active', true)
-    .eq('inventory.location_id', locationId)
     .order('name')
   return (data ?? []) as unknown as Product[]
 }
