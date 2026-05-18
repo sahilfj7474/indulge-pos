@@ -19,9 +19,10 @@ export function canManageLocations(role: UserRole) { return hasRole(role, 'admin
 export function canViewAllLocations(role: UserRole){ return hasRole(role, 'manager') }
 export function canViewReports(role: UserRole)     { return hasRole(role, 'supervisor') }
 export function canAdjustInventory(role: UserRole) { return hasRole(role, 'supervisor') }
-export function canManageSuppliers(role: UserRole) { return hasRole(role, 'manager') }
-export function canManagePO(role: UserRole)        { return hasRole(role, 'manager') }
-export function canDoStockTake(role: UserRole)     { return hasRole(role, 'supervisor') }
+export function canManageSuppliers(role: UserRole)   { return hasRole(role, 'manager') }
+export function canManagePO(role: UserRole)          { return hasRole(role, 'manager') }
+export function canDoStockTake(role: UserRole)       { return hasRole(role, 'supervisor') }
+export function canManagePromotions(role: UserRole)  { return hasRole(role, 'manager') }
 
 export interface NavItem {
   label: string
@@ -46,6 +47,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Stock Transfers',  href: '/stock-transfers',  icon: 'ArrowLeftRight',minRole: 'supervisor', group: 'Inventory' },
   // Products & Purchasing
   { label: 'Products',         href: '/products',         icon: 'Package',       minRole: 'manager',    group: 'Catalog' },
+  { label: 'Promotions',       href: '/promotions',       icon: 'Zap',           minRole: 'manager',    group: 'Catalog' },
   { label: 'Suppliers',        href: '/suppliers',        icon: 'Truck',         minRole: 'manager',    group: 'Catalog' },
   { label: 'Purchase Orders',  href: '/purchase-orders',  icon: 'ShoppingBag',   minRole: 'manager',    group: 'Catalog' },
   // Reports & Admin

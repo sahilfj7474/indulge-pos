@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import { Product, Category, Location } from '@/types'
 import { createProduct, updateProduct, getLocations } from '@/lib/services/admin.service'
 import { getStockByProduct, setStockLevel } from '@/lib/services/inventory.service'
+import { getVariants, createVariant, updateVariant, deleteVariant, ProductVariant } from '@/lib/services/variants.service'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/lib/auth/context'
 import Modal from '@/components/ui/Modal'
-import { ImagePlus } from 'lucide-react'
+import { ImagePlus, Plus, Trash2, Package2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Props {
@@ -35,16 +36,22 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [locations, setLocations] = useState<Location[]>([])
-  // Map of location_id -> quantity string (for the input)
   const [stockInputs, setStockInputs] = useState<Record<string, string>>({})
-  // Original quantities for edit mode (to detect changes)
   const [originalStock, setOriginalStock] = useState<Record<string, number>>({})
 
+  // Variants
+  const [hasVariants, setHasVariants] = useState((product as any)?.has_variants ?? false)
+  const [variants, setVariants] = useState<(ProductVariant | { _new: true; name: string; price_override: string })[]>([])
+
   useEffect(() => {
-    async function loadLocations() {
-      const locs = await getLocations()
+    async function loadData() {
+      const [locs, existingVariants] = await Promise.all([
+        getLocations(),
+        product ? getVariants(product.id) : Promise.resolve([]),
+      ])
       const active = locs.filter(l => l.is_active !== false)
       setLocations(active)
+      setVariants(existingVariants)
 
       if (product) {
         const stockRows = await getStockByProduct(product.id)
@@ -63,7 +70,7 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
         setStockInputs(inputs)
       }
     }
-    loadLocations()
+    loadData()
   }, [product?.id])
 
   function set(field: string, value: string | boolean) {
@@ -109,9 +116,9 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
 
       if (product) {
         const uploadedUrl = await uploadImage(product.id)
-        await updateProduct(product.id, { ...payload, image_url: uploadedUrl })
+        await updateProduct(product.id, { ...payload, image_url: uploadedUrl, has_variants: hasVariants } as any)
 
-        // Apply stock level changes where quantity differs from original
+        // Apply stock level changes
         const userId = user?.id ?? ''
         await Promise.all(
           locations.map(async loc => {
@@ -122,16 +129,52 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
             }
           })
         )
+
+        // Save new variants
+        if (hasVariants) {
+          for (const v of variants) {
+            if ('_new' in v) {
+              if (v.name.trim()) {
+                await createVariant({
+                  parent_product_id: product.id,
+                  name: v.name.trim(),
+                  sku: null,
+                  barcode: null,
+                  price_override: v.price_override ? parseFloat(v.price_override) : null,
+                  is_active: true,
+                  sort_order: 0,
+                })
+              }
+            }
+          }
+        }
+
         toast.success('Product updated')
       } else {
         const initialStock = locations.map(loc => ({
           location_id: loc.id,
           quantity: parseInt(stockInputs[loc.id] ?? '0') || 0,
         }))
-        const created = await createProduct(payload, initialStock)
+        const created = await createProduct({ ...payload, has_variants: hasVariants } as any, initialStock)
         if (imageFile && created) {
           const uploadedUrl = await uploadImage(created.id)
           if (uploadedUrl) await updateProduct(created.id, { image_url: uploadedUrl })
+        }
+        // Save variants for new product
+        if (hasVariants) {
+          for (const v of variants) {
+            if ('_new' in v && v.name.trim()) {
+              await createVariant({
+                parent_product_id: created.id,
+                name: v.name.trim(),
+                sku: null,
+                barcode: null,
+                price_override: v.price_override ? parseFloat(v.price_override) : null,
+                is_active: true,
+                sort_order: 0,
+              })
+            }
+          }
         }
         toast.success('Product created')
       }
@@ -244,6 +287,69 @@ export default function ProductModal({ product, categories, onClose, onSaved }: 
             </div>
           </div>
         )}
+
+        {/* Variants */}
+        <div className="border-t border-gray-700 pt-4">
+          <div className="flex items-center gap-3 mb-2">
+            <input type="checkbox" id="has_variants" checked={hasVariants}
+              onChange={e => setHasVariants(e.target.checked)} className="w-4 h-4 accent-indigo-600" />
+            <label htmlFor="has_variants" className="text-sm text-gray-300 flex items-center gap-1.5">
+              <Package2 size={14} /> This product has variants (e.g. sizes, colours)
+            </label>
+          </div>
+
+          {hasVariants && (
+            <div className="space-y-2 mt-3">
+              <p className="text-xs text-gray-500">Leave price blank to use the base price above.</p>
+              {variants.map((v, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  {'_new' in v ? (
+                    <>
+                      <input type="text" placeholder="Variant name (e.g. Small)"
+                        value={v.name} onChange={e => {
+                          const next = [...variants]
+                          ;(next[i] as any).name = e.target.value
+                          setVariants(next)
+                        }}
+                        className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                      <input type="number" step="0.01" min="0" placeholder="Price"
+                        value={v.price_override} onChange={e => {
+                          const next = [...variants]
+                          ;(next[i] as any).price_override = e.target.value
+                          setVariants(next)
+                        }}
+                        className="w-20 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm text-right focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                      <button type="button" onClick={() => setVariants(variants.filter((_, j) => j !== i))}
+                        className="text-gray-500 hover:text-red-400">
+                        <Trash2 size={13} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-sm text-gray-300">{(v as ProductVariant).name}</span>
+                      <span className="text-xs text-gray-500 w-20 text-right">
+                        {(v as ProductVariant).price_override ? `$${(v as ProductVariant).price_override}` : 'Base price'}
+                      </span>
+                      <button type="button"
+                        onClick={async () => {
+                          await deleteVariant((v as ProductVariant).id)
+                          setVariants(variants.filter((_, j) => j !== i))
+                        }}
+                        className="text-gray-500 hover:text-red-400">
+                        <Trash2 size={13} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              ))}
+              <button type="button"
+                onClick={() => setVariants([...variants, { _new: true, name: '', price_override: '' }])}
+                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 mt-1">
+                <Plus size={12} /> Add variant
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} className="w-4 h-4 accent-indigo-600" />

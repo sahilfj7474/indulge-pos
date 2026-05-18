@@ -6,7 +6,6 @@ import { Sale, CartItem, Customer, Location, User } from '@/types'
 import { SplitPayment } from '@/lib/services/pos.service'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { X, Printer } from 'lucide-react'
-import { TAX_RATE } from './Cart'
 
 interface Props {
   sale: Sale
@@ -18,6 +17,9 @@ interface Props {
   loyaltyPointsRedeemed: number
   loyaltyPointsEarned: number
   splitPayments?: SplitPayment[]
+  settings?: Record<string, string>
+  taxRate?: number
+  taxInclusive?: boolean
   onClose: () => void
 }
 
@@ -31,6 +33,9 @@ export default function Receipt({
   loyaltyPointsRedeemed,
   loyaltyPointsEarned,
   splitPayments,
+  settings = {},
+  taxRate = 0.09,
+  taxInclusive = false,
   onClose,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -41,6 +46,15 @@ export default function Receipt({
     : 0
 
   const surcharge = (sale as any).surcharge_amount ?? 0
+
+  const storeName = settings.store_name || location.name
+  const businessAddress = settings.business_address || location.address || ''
+  const businessPhone = settings.business_phone || location.phone || ''
+  const businessEmail = settings.business_email || ''
+  const vatNumber = settings.vat_number || ''
+  const receiptHeader = settings.receipt_header || ''
+  const receiptFooter = settings.receipt_footer || 'Thank you for your purchase!'
+  const taxLabel = `${(taxRate * 100).toFixed(0)}% VAT${taxInclusive ? ' (incl.)' : ''}`
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -63,9 +77,12 @@ export default function Receipt({
         <div className="p-4 max-h-[70vh] overflow-y-auto">
           <div ref={ref} className="receipt-print bg-white text-black p-4 font-mono text-xs">
             <div className="text-center mb-3">
-              <p className="text-base font-bold">{location.name}</p>
-              {location.address && <p>{location.address}</p>}
-              {location.phone && <p>Tel: {location.phone}</p>}
+              <p className="text-base font-bold">{storeName}</p>
+              {businessAddress && <p>{businessAddress}</p>}
+              {businessPhone && <p>Tel: {businessPhone}</p>}
+              {businessEmail && <p>{businessEmail}</p>}
+              {vatNumber && <p>VAT Reg: {vatNumber}</p>}
+              {receiptHeader && <p className="mt-1 italic">{receiptHeader}</p>}
               <p className="mt-1">{'='.repeat(36)}</p>
             </div>
 
@@ -105,7 +122,7 @@ export default function Receipt({
                 <div className="flex justify-between"><span>Points Redeemed</span><span>-{formatCurrency(loyaltyPointsRedeemed)}</span></div>
               )}
               <div className="flex justify-between">
-                <span>Tax ({(TAX_RATE * 100).toFixed(0)}% GST)</span>
+                <span>{taxLabel}</span>
                 <span>{formatCurrency(sale.tax_amount)}</span>
               </div>
               {surcharge > 0 && (
@@ -126,6 +143,11 @@ export default function Receipt({
                     <span>{formatCurrency(sp.amount)}</span>
                   </div>
                 ))
+              ) : sale.payment_method === 'account' ? (
+                <div className="flex justify-between">
+                  <span>Charged to Account</span>
+                  <span>{formatCurrency(sale.total)}</span>
+                </div>
               ) : (
                 <>
                   <div className="flex justify-between">
@@ -153,8 +175,7 @@ export default function Receipt({
             )}
 
             <p className="my-2">{'='.repeat(36)}</p>
-            <p className="text-center">Thank you for your purchase!</p>
-            <p className="text-center">Please come again.</p>
+            <p className="text-center">{receiptFooter}</p>
           </div>
         </div>
       </div>

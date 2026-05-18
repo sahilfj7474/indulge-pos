@@ -104,7 +104,7 @@ export interface SaleItem {
   total: number
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'loyalty_points' | 'split'
+export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'loyalty_points' | 'split' | 'account'
 export type SaleStatus = 'completed' | 'refunded' | 'partial_refund' | 'voided'
 
 export interface Refund {

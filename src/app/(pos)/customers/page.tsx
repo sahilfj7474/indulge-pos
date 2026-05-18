@@ -7,7 +7,8 @@ import { getCustomerSales, adjustLoyaltyPoints } from '@/lib/services/customers.
 import { formatCurrency, formatDate, formatDateTime, cn } from '@/lib/utils'
 import CustomerModal from '@/components/customers/CustomerModal'
 import Modal from '@/components/ui/Modal'
-import { Plus, Search, Star, Pencil, History, Gift } from 'lucide-react'
+import { Plus, Search, Star, Pencil, History, Gift, BookUser } from 'lucide-react'
+import { getOrCreateAccount, recordAccountPayment, getAccountTransactions, CustomerAccount, AccountTransaction } from '@/lib/services/accounts.service'
 import toast from 'react-hot-toast'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -34,6 +35,14 @@ export default function CustomersPage() {
   const [loyaltyPoints, setLoyaltyPoints] = useState('')
   const [loyaltyNote, setLoyaltyNote] = useState('')
   const [savingLoyalty, setSavingLoyalty] = useState(false)
+
+  // House account
+  const [accountCustomer, setAccountCustomer] = useState<Customer | null>(null)
+  const [account, setAccount] = useState<CustomerAccount | null>(null)
+  const [accountTxs, setAccountTxs] = useState<AccountTransaction[]>([])
+  const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentNote, setPaymentNote] = useState('')
+  const [savingPayment, setSavingPayment] = useState(false)
 
   async function load() {
     const supabase = createClient()
@@ -66,6 +75,28 @@ export default function CustomersPage() {
       setLoyaltyNote('')
       load()
     } catch { toast.error('Failed to adjust points') } finally { setSavingLoyalty(false) }
+  }
+
+  async function openAccount(c: Customer) {
+    setAccountCustomer(c)
+    const [acct, txs] = await Promise.all([getOrCreateAccount(c.id), getAccountTransactions(c.id)])
+    setAccount(acct)
+    setAccountTxs(txs)
+    setPaymentAmount('')
+    setPaymentNote('')
+  }
+
+  async function handleAccountPayment() {
+    if (!accountCustomer || !account) return
+    const amt = parseFloat(paymentAmount)
+    if (isNaN(amt) || amt <= 0) { toast.error('Enter a valid payment amount'); return }
+    if (amt > account.balance) { toast.error('Amount exceeds outstanding balance'); return }
+    setSavingPayment(true)
+    try {
+      await recordAccountPayment(accountCustomer.id, amt, paymentNote || 'Payment received')
+      toast.success('Payment recorded')
+      await openAccount(accountCustomer)
+    } catch { toast.error('Failed to record payment') } finally { setSavingPayment(false) }
   }
 
   const filtered = useMemo(() => {
@@ -141,6 +172,10 @@ export default function CustomersPage() {
                       className="p-1.5 text-gray-400 hover:text-indigo-400 hover:bg-gray-700 rounded transition-colors">
                       <History size={13} />
                     </button>
+                    <button title="House account" onClick={() => openAccount(c)}
+                      className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors">
+                      <BookUser size={13} />
+                    </button>
                     <button title="Adjust loyalty points" onClick={() => setLoyaltyCustomer(c)}
                       className="p-1.5 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded transition-colors">
                       <Gift size={13} />
@@ -215,6 +250,73 @@ export default function CustomersPage() {
                 </table>
               </div>
             )}
+          </div>
+        </Modal>
+      )}
+
+      {/* House Account Modal */}
+      {accountCustomer && account && (
+        <Modal title={`House Account — ${accountCustomer.full_name}`} onClose={() => setAccountCustomer(null)} maxWidth="max-w-lg">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-800 rounded-lg p-3">
+                <p className="text-xs text-gray-400">Outstanding Balance</p>
+                <p className={`text-xl font-bold ${account.balance > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {formatCurrency(account.balance)}
+                </p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3">
+                <p className="text-xs text-gray-400">Credit Limit</p>
+                <p className="text-xl font-bold text-gray-300">{formatCurrency(account.credit_limit)}</p>
+              </div>
+            </div>
+
+            {account.balance > 0 && (
+              <div className="bg-blue-900/20 border border-blue-800/40 rounded-lg p-3 space-y-2">
+                <p className="text-xs font-medium text-blue-300">Record a Payment</p>
+                <div className="flex gap-2">
+                  <input type="number" min="0.01" step="0.01" placeholder="Amount"
+                    value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)}
+                    className="w-28 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input type="text" placeholder="Note (optional)"
+                    value={paymentNote} onChange={e => setPaymentNote(e.target.value)}
+                    className="flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <button onClick={handleAccountPayment} disabled={savingPayment}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg">
+                    {savingPayment ? '...' : 'Pay'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-gray-800 rounded-lg overflow-hidden max-h-72 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-gray-700">
+                  <tr>
+                    <th className="text-left px-3 py-2 text-gray-400">Date</th>
+                    <th className="text-left px-3 py-2 text-gray-400">Type</th>
+                    <th className="text-right px-3 py-2 text-gray-400">Amount</th>
+                    <th className="text-left px-3 py-2 text-gray-400">Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accountTxs.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center py-6 text-gray-500">No transactions yet</td></tr>
+                  ) : accountTxs.map(tx => (
+                    <tr key={tx.id} className="border-t border-gray-700/50">
+                      <td className="px-3 py-2 text-gray-400">{formatDate(tx.created_at)}</td>
+                      <td className="px-3 py-2">
+                        <span className={tx.type === 'charge' ? 'text-red-400' : 'text-green-400'}>
+                          {tx.type === 'charge' ? 'Charge' : 'Payment'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium text-white">{formatCurrency(tx.amount)}</td>
+                      <td className="px-3 py-2 text-gray-400">{tx.note ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </Modal>
       )}

@@ -3,10 +3,42 @@
 import { useState } from 'react'
 import { CartItem, Customer } from '@/types'
 import { formatCurrency, cn } from '@/lib/utils'
-import { Minus, Plus, Trash2, Tag, MessageSquare, PauseCircle, Percent } from 'lucide-react'
+import { Minus, Plus, Trash2, Tag, MessageSquare, PauseCircle, Percent, Zap } from 'lucide-react'
 import CustomerSearch from './CustomerSearch'
 
-export const TAX_RATE = 0.09
+export const DEFAULT_TAX_RATE = 0.09
+
+export function computeTotals(
+  items: CartItem[],
+  discountType: 'percentage' | 'fixed',
+  discountValue: number,
+  loyaltyPointsRedeemed: number,
+  surchargeAmount = 0,
+  taxRate = DEFAULT_TAX_RATE,
+  taxInclusive = false
+) {
+  const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity - i.discount_amount, 0)
+  const discountAmount =
+    discountType === 'percentage'
+      ? (subtotal * discountValue) / 100
+      : Math.min(discountValue, subtotal)
+  const loyaltyDiscount = loyaltyPointsRedeemed
+  const taxable = Math.max(0, subtotal - discountAmount - loyaltyDiscount)
+
+  let taxAmount: number
+  let total: number
+
+  if (taxInclusive) {
+    // Tax is already included in the price — extract it for display
+    taxAmount = taxable * (taxRate / (1 + taxRate))
+    total = taxable + surchargeAmount
+  } else {
+    taxAmount = taxable * taxRate
+    total = taxable + taxAmount + surchargeAmount
+  }
+
+  return { subtotal, discountAmount, loyaltyDiscount, taxAmount, surchargeAmount, total }
+}
 
 interface Props {
   items: CartItem[]
@@ -15,6 +47,9 @@ interface Props {
   discountValue: number
   loyaltyPointsToRedeem: number
   surchargeAmount: number
+  taxRate?: number
+  taxInclusive?: boolean
+  appliedPromoName?: string | null
   onCustomerChange: (c: Customer | null) => void
   onQtyChange: (index: number, qty: number) => void
   onRemove: (index: number) => void
@@ -28,25 +63,6 @@ interface Props {
   onHold: () => void
 }
 
-export function computeTotals(
-  items: CartItem[],
-  discountType: 'percentage' | 'fixed',
-  discountValue: number,
-  loyaltyPointsRedeemed: number,
-  surchargeAmount = 0
-) {
-  const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity - i.discount_amount, 0)
-  const discountAmount =
-    discountType === 'percentage'
-      ? (subtotal * discountValue) / 100
-      : Math.min(discountValue, subtotal)
-  const loyaltyDiscount = loyaltyPointsRedeemed
-  const taxable = Math.max(0, subtotal - discountAmount - loyaltyDiscount)
-  const taxAmount = taxable * TAX_RATE
-  const total = taxable + taxAmount + surchargeAmount
-  return { subtotal, discountAmount, loyaltyDiscount, taxAmount, surchargeAmount, total }
-}
-
 export default function Cart({
   items,
   customer,
@@ -54,6 +70,9 @@ export default function Cart({
   discountValue,
   loyaltyPointsToRedeem,
   surchargeAmount,
+  taxRate = DEFAULT_TAX_RATE,
+  taxInclusive = false,
+  appliedPromoName,
   onCustomerChange,
   onQtyChange,
   onRemove,
@@ -68,9 +87,10 @@ export default function Cart({
 }: Props) {
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set())
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
-    items, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount
+    items, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount, taxRate, taxInclusive
   )
   const maxRedeem = customer ? Math.min(customer.loyalty_points, Math.floor(subtotal - discountAmount)) : 0
+  const taxLabel = `${(taxRate * 100).toFixed(0)}% VAT${taxInclusive ? ' (incl.)' : ''}`
 
   function toggleNote(i: number) {
     setExpandedNotes(prev => {
@@ -150,6 +170,14 @@ export default function Cart({
       {/* Discount + Surcharge */}
       {items.length > 0 && (
         <div className="px-3 py-2 border-t border-gray-800 space-y-2">
+          {/* Auto-applied promo badge */}
+          {appliedPromoName && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-800/50 rounded-lg">
+              <Zap size={11} className="text-green-400" />
+              <span className="text-xs text-green-400">Promo: {appliedPromoName}</span>
+            </div>
+          )}
+
           {/* Discount */}
           <div className="flex items-center gap-2">
             <Tag size={13} className="text-gray-400" />
@@ -223,7 +251,7 @@ export default function Cart({
           </div>
         )}
         <div className="flex justify-between text-sm text-gray-400">
-          <span>Tax (9% GST)</span><span>{formatCurrency(taxAmount)}</span>
+          <span>{taxLabel}</span><span>{formatCurrency(taxAmount)}</span>
         </div>
         {surchargeAmount > 0 && (
           <div className="flex justify-between text-sm text-yellow-400">

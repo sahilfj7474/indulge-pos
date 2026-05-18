@@ -8,7 +8,7 @@ import {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings, LogOut,
   DollarSign, BookOpen, ClipboardList, ArrowLeftRight,
-  Truck, ShoppingBag, PauseCircle,
+  Truck, ShoppingBag, PauseCircle, Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +16,7 @@ const ICONS: Record<string, React.ElementType> = {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings,
   DollarSign, BookOpen, ClipboardList, ArrowLeftRight,
-  Truck, ShoppingBag, PauseCircle,
+  Truck, ShoppingBag, PauseCircle, Zap,
 }
 
 export default function Sidebar() {

@@ -8,7 +8,7 @@ import { voidSale } from '@/lib/services/sales.service'
 import Modal from '@/components/ui/Modal'
 import RefundModal from './RefundModal'
 import { Printer, Ban, RotateCcw } from 'lucide-react'
-import { TAX_RATE } from '@/components/pos/Cart'
+import { DEFAULT_TAX_RATE as TAX_RATE } from '@/components/pos/Cart'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 

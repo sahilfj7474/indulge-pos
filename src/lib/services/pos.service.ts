@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { CartItem, PaymentMethod, Sale } from '@/types'
 import { calculateLoyaltyPoints } from '@/lib/utils'
+import { chargeToAccount } from './accounts.service'
 
 export interface SplitPayment {
   method: Exclude<PaymentMethod, 'split'>
@@ -66,6 +67,9 @@ export async function completeSale(params: CompleteSaleParams): Promise<Sale> {
 
   if (params.customerId) {
     await updateCustomerLoyalty(params.customerId, sale.id, params.total, params.loyaltyPointsRedeemed)
+    if (params.paymentMethod === 'account') {
+      await chargeToAccount(params.customerId, sale.id, params.total)
+    }
   }
 
   return sale as Sale

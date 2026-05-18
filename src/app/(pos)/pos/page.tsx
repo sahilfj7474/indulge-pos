@@ -6,14 +6,18 @@ import { useAuth } from '@/lib/auth/context'
 import { getCategories, getActiveProducts, getProductByBarcode, searchProducts } from '@/lib/services/products.service'
 import { completeSale, SplitPayment } from '@/lib/services/pos.service'
 import { getHeldOrders, saveHeldOrder, HeldOrderRecord } from '@/lib/services/held-orders.service'
+import { getSettings } from '@/lib/services/settings.service'
+import { getActivePromotions, applyPromotions, Promotion } from '@/lib/services/promotions.service'
+import { getVariants, ProductVariant } from '@/lib/services/variants.service'
 import { calculateLoyaltyPoints } from '@/lib/utils'
 import BarcodeInput from '@/components/pos/BarcodeInput'
 import CategoryFilter from '@/components/pos/CategoryFilter'
 import ProductGrid from '@/components/pos/ProductGrid'
-import Cart, { computeTotals } from '@/components/pos/Cart'
+import Cart, { computeTotals, DEFAULT_TAX_RATE } from '@/components/pos/Cart'
 import PaymentModal from '@/components/pos/PaymentModal'
 import Receipt from '@/components/pos/Receipt'
 import HeldOrdersModal from '@/components/pos/HeldOrdersModal'
+import VariantSelectModal from '@/components/pos/VariantSelectModal'
 import { PauseCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -28,6 +32,14 @@ export default function POSPage() {
   const [searchResults, setSearchResults] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
 
+  // Settings
+  const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE)
+  const [taxInclusive, setTaxInclusive] = useState(false)
+  const [settings, setSettings] = useState<Record<string, string>>({})
+
+  // Promotions
+  const [promotions, setPromotions] = useState<Promotion[]>([])
+
   // Cart state
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [customer, setCustomer] = useState<Customer | null>(null)
@@ -35,6 +47,10 @@ export default function POSPage() {
   const [discountValue, setDiscountValue] = useState(0)
   const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0)
   const [surchargeAmount, setSurchargeAmount] = useState(0)
+
+  // Variant selection
+  const [variantProduct, setVariantProduct] = useState<Product | null>(null)
+  const [variants, setVariants] = useState<ProductVariant[]>([])
 
   // Flow state
   const [showPayment, setShowPayment] = useState(false)
@@ -46,9 +62,19 @@ export default function POSPage() {
 
   useEffect(() => {
     if (!user?.location_id) return
-    Promise.all([getCategories(), getActiveProducts(user.location_id)]).then(([cats, prods]) => {
+    Promise.all([
+      getCategories(),
+      getActiveProducts(user.location_id),
+      getSettings(),
+      getActivePromotions(),
+    ]).then(([cats, prods, s, promos]) => {
       setCategories(cats)
       setProducts(prods)
+      setSettings(s)
+      const rate = parseFloat(s.tax_rate ?? '9') / 100
+      setTaxRate(isNaN(rate) ? DEFAULT_TAX_RATE : rate)
+      setTaxInclusive(s.tax_inclusive === 'true')
+      setPromotions(promos)
       setLoadingProducts(false)
     })
     loadHeldOrders()
@@ -77,15 +103,37 @@ export default function POSPage() {
     return base.filter(p => p.category_id === selectedCategory)
   }, [products, searchResults, searchQuery, selectedCategory])
 
-  function addToCart(product: Product) {
+  async function addToCart(product: Product) {
+    // Check if product has variants — if so, show variant picker
+    if ((product as any).has_variants) {
+      const v = await getVariants(product.id)
+      if (v.length > 0) {
+        setVariants(v)
+        setVariantProduct(product)
+        return
+      }
+    }
+    addProductToCart(product)
+  }
+
+  function addProductToCart(product: Product, variantName?: string, priceOverride?: number) {
+    const unitPrice = priceOverride ?? product.price
+    const displayName = variantName ? `${product.name} (${variantName})` : product.name
     setCartItems(prev => {
-      const existing = prev.findIndex(i => i.product.id === product.id)
+      const key = `${product.id}-${variantName ?? ''}`
+      const existing = prev.findIndex(i => i.product.id === product.id && i.product.name === displayName)
       if (existing >= 0) {
         const updated = [...prev]
         updated[existing] = { ...updated[existing], quantity: updated[existing].quantity + 1 }
         return updated
       }
-      return [...prev, { product, quantity: 1, unit_price: product.price, discount_amount: 0, note: '' }]
+      return [...prev, {
+        product: { ...product, name: displayName },
+        quantity: 1,
+        unit_price: unitPrice,
+        discount_amount: 0,
+        note: '',
+      }]
     })
   }
 
@@ -159,19 +207,36 @@ export default function POSPage() {
     toast.success(`Resumed: ${order.label}`)
   }
 
+  // Auto-apply promotions
+  const subtotalRaw = cartItems.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+  const { itemDiscounts: promoDiscounts, appliedPromo } = useMemo(
+    () => applyPromotions(cartItems, promotions, subtotalRaw),
+    [cartItems, promotions, subtotalRaw]
+  )
+
+  // Merge promo discounts into cart items (in-memory, not mutating state)
+  const cartItemsWithPromo = useMemo(() =>
+    cartItems.map((item, i) => ({ ...item, discount_amount: item.discount_amount + (promoDiscounts[i] ?? 0) })),
+    [cartItems, promoDiscounts]
+  )
+
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
-    cartItems, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount
+    cartItemsWithPromo, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount, taxRate, taxInclusive
   )
 
   async function handleCompleteSale(method: PaymentMethod, amountTendered: number, splits?: SplitPayment[]) {
     if (!user) return
+    if (method === 'account' && !customer) {
+      toast.error('Select a customer to charge to account')
+      return
+    }
     setShowPayment(false)
     try {
       const sale = await completeSale({
         locationId: user.location_id!,
         userId: user.id,
         customerId: customer?.id ?? null,
-        items: cartItems,
+        items: cartItemsWithPromo,
         subtotal,
         discountAmount: discountAmount + loyaltyDiscount,
         taxAmount,
@@ -210,7 +275,6 @@ export default function POSPage() {
     <div className="flex h-full gap-0 -m-6">
       {/* Left: Products */}
       <div className="flex-1 flex flex-col min-w-0 p-4 overflow-hidden">
-        {/* Search/Barcode + Held Orders button */}
         <div className="flex gap-2">
           <div className="flex-1">
             <BarcodeInput
@@ -230,12 +294,10 @@ export default function POSPage() {
           )}
         </div>
 
-        {/* Category filter */}
         <div className="mt-3 mb-3">
           <CategoryFilter categories={categories} selected={selectedCategory} onSelect={setSelectedCategory} />
         </div>
 
-        {/* Product grid */}
         <div className="flex-1 overflow-y-auto">
           {loadingProducts ? (
             <div className="flex items-center justify-center h-48 text-gray-500 text-sm">Loading products...</div>
@@ -248,12 +310,15 @@ export default function POSPage() {
       {/* Right: Cart */}
       <div className="w-80 shrink-0 flex flex-col">
         <Cart
-          items={cartItems}
+          items={cartItemsWithPromo}
           customer={customer}
           discountType={discountType}
           discountValue={discountValue}
           loyaltyPointsToRedeem={loyaltyPointsToRedeem}
           surchargeAmount={surchargeAmount}
+          taxRate={taxRate}
+          taxInclusive={taxInclusive}
+          appliedPromoName={appliedPromo}
           onCustomerChange={c => { setCustomer(c); setLoyaltyPointsToRedeem(0) }}
           onQtyChange={updateQty}
           onRemove={removeItem}
@@ -273,6 +338,7 @@ export default function POSPage() {
         <PaymentModal
           total={total}
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}
+          hasCustomer={!!customer}
           onConfirm={handleCompleteSale}
           onClose={() => setShowPayment(false)}
         />
@@ -287,10 +353,22 @@ export default function POSPage() {
         />
       )}
 
+      {variantProduct && (
+        <VariantSelectModal
+          product={variantProduct}
+          variants={variants}
+          onSelect={(v) => {
+            addProductToCart(variantProduct, v.name, v.price_override ?? variantProduct.price)
+            setVariantProduct(null)
+          }}
+          onClose={() => setVariantProduct(null)}
+        />
+      )}
+
       {completedSale && user.location && (
         <Receipt
           sale={completedSale.sale}
-          items={cartItems}
+          items={cartItemsWithPromo}
           customer={customer}
           location={user.location}
           cashier={user}
@@ -298,6 +376,9 @@ export default function POSPage() {
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}
           loyaltyPointsEarned={completedSale.pointsEarned}
           splitPayments={completedSale.splits}
+          settings={settings}
+          taxRate={taxRate}
+          taxInclusive={taxInclusive}
           onClose={handleReceiptClose}
         />
       )}
