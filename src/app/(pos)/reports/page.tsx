@@ -1,20 +1,24 @@
 ﻿'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/lib/auth/context'
 import {
   fetchSalesForReport, aggregateSalesTrend, aggregateByCategory,
   aggregateByProduct, aggregateByStaff, aggregateByPayment,
-  aggregateHourly, buildZReportData, SaleRow,
+  aggregateHourly, buildZReportData, getRefundsTotal, SaleRow,
 } from '@/lib/services/reports.service'
+import { getLocations } from '@/lib/services/admin.service'
+import { Location } from '@/types'
 import { formatCurrency, exportToCSV, cn } from '@/lib/utils'
+import DateRangePicker from '@/components/ui/DateRangePicker'
+import LocationPicker from '@/components/ui/LocationPicker'
 import ZReportModal from '@/components/reports/ZReportModal'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
   BarElement, ArcElement, Title, Tooltip, Legend, Filler,
 } from 'chart.js'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
-import { Download, FileText, TrendingUp, Package, Users, CreditCard, Clock } from 'lucide-react'
+import { Download, FileText, TrendingUp, Package, Users, CreditCard, Clock, ChevronDown } from 'lucide-react'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
 
@@ -37,27 +41,70 @@ const CHART_OPTIONS = {
   responsive: true,
   plugins: { legend: { display: false } },
   scales: {
-    x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
-    y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+    x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
+    y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
   },
 }
 
 export default function ReportsPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState<Tab>('summary')
-  const [dateFrom, setDateFrom] = useState(TODAY)
-  const [dateTo, setDateTo] = useState(TODAY)
-  const [sales, setSales] = useState<SaleRow[]>([])
-  const [loading, setLoading] = useState(false)
-  const [zType, setZType] = useState<'X' | 'Z' | null>(null)
+  const isManager = user?.role === 'manager' || user?.role === 'admin'
+  const [tab,       setTab]       = useState<Tab>('summary')
+  const [dateFrom,  setDateFrom]  = useState(TODAY)
+  const [dateTo,    setDateTo]    = useState(TODAY)
+  const [sales,     setSales]     = useState<SaleRow[]>([])
+  const [loading,   setLoading]   = useState(false)
+  const [zType,     setZType]     = useState<'X' | 'Z' | null>(null)
+  const [refundsTotal,       setRefundsTotal]       = useState(0)
+  const [locations,          setLocations]          = useState<Location[]>([])
+  const [selectedLocationId, setSelectedLocationId] = useState('')
+  const [exportOpen,         setExportOpen]         = useState(false)
+  const [exportPos,          setExportPos]          = useState({ top: 0, right: 0 })
+  const exportBtnRef  = useRef<HTMLButtonElement>(null)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
+
+  // '' = All Stores (manager+); non-manager locked to their location
+  const effectiveLocationId = isManager ? selectedLocationId : (user?.location_id ?? '')
+
+  useEffect(() => {
+    if (!isManager) return
+    getLocations().then(locs => {
+      setLocations(locs.filter(l => l.is_active !== false))
+    })
+  }, [isManager]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close export dropdown on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (
+        exportBtnRef.current?.contains(e.target as Node) ||
+        exportMenuRef.current?.contains(e.target as Node)
+      ) return
+      setExportOpen(false)
+    }
+    if (exportOpen) document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [exportOpen])
+
+  function openExport() {
+    if (exportBtnRef.current) {
+      const rect = exportBtnRef.current.getBoundingClientRect()
+      setExportPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+    }
+    setExportOpen(o => !o)
+  }
 
   const load = useCallback(async () => {
-    if (!user?.location_id) return
+    if (!effectiveLocationId) return
     setLoading(true)
-    const data = await fetchSalesForReport(user.location_id, dateFrom, dateTo)
+    const [data, refunds] = await Promise.all([
+      fetchSalesForReport(effectiveLocationId, dateFrom, dateTo),
+      getRefundsTotal(effectiveLocationId, dateFrom, dateTo),
+    ])
     setSales(data)
+    setRefundsTotal(refunds)
     setLoading(false)
-  }, [user?.location_id, dateFrom, dateTo])
+  }, [effectiveLocationId, dateFrom, dateTo])
 
   useEffect(() => { load() }, [load])
 
@@ -71,7 +118,13 @@ export default function ReportsPage() {
   const totalRevenue    = sales.reduce((s, r) => s + r.total, 0)
   const totalTx         = sales.length
   const totalDiscount   = sales.reduce((s, r) => s + r.discount_amount, 0)
+  const totalTax        = sales.reduce((s, r) => s + r.tax_amount, 0)
   const avgTx           = totalTx ? totalRevenue / totalTx : 0
+  const totalExTax      = sales.reduce((s, r) => s + (r.total - r.tax_amount), 0)
+  const totalCOGS       = sales.reduce((s, r) => s + r.items.reduce((is, item) => is + (item.product?.cost ?? 0) * item.quantity, 0), 0)
+  const grossProfit     = totalExTax - totalCOGS
+  const marginPct       = totalExTax > 0 ? (grossProfit / totalExTax) * 100 : 0
+  const netSales        = totalRevenue - refundsTotal
 
   const zData = user
     ? buildZReportData(sales, user.location?.name ?? 'Store', dateFrom === dateTo ? dateFrom : `${dateFrom} to ${dateTo}`, user.full_name)
@@ -93,23 +146,74 @@ export default function ReportsPage() {
           <h1 className="text-xl font-bold text-slate-900">Reports</h1>
           <p className="text-sm text-slate-500 mt-0.5">{loading ? 'Loading...' : `${totalTx} transactions`}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            className="px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <span className="text-slate-400 self-center text-sm">to</span>
-          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            className="px-3 py-1.5 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          {/* Quick ranges */}
-          {[
-            { label: 'Today',     from: TODAY, to: TODAY },
-            { label: 'This Week', from: (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d.toISOString().slice(0,10) })(), to: TODAY },
-            { label: 'This Month',from: TODAY.slice(0,7) + '-01', to: TODAY },
-          ].map(r => (
-            <button key={r.label} onClick={() => { setDateFrom(r.from); setDateTo(r.to) }}
-              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-xs font-medium rounded-lg transition-colors">
-              {r.label}
+        <div className="flex items-center gap-2 flex-wrap">
+          {isManager && locations.length > 0 && (
+            <LocationPicker
+              locations={locations}
+              selectedId={selectedLocationId}
+              onChange={setSelectedLocationId}
+            />
+          )}
+          <DateRangePicker
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onChange={(from, to) => { setDateFrom(from); setDateTo(to) }}
+          />
+          {/* Export dropdown */}
+          <div className="relative">
+            <button
+              ref={exportBtnRef}
+              onClick={openExport}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none"
+            >
+              <Download size={13} /> Export <ChevronDown size={13} className={cn('transition-transform', exportOpen && 'rotate-180')} />
             </button>
-          ))}
+            {exportOpen && (
+              <div
+                ref={exportMenuRef}
+                style={{ position: 'fixed', top: exportPos.top, right: exportPos.right, zIndex: 9999 }}
+                className="bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    exportToCSV(sales.map(s => ({
+                      Date: s.created_at.slice(0, 10),
+                      'Payment Method': s.payment_method,
+                      Subtotal: s.subtotal,
+                      Discount: s.discount_amount,
+                      Tax: s.tax_amount,
+                      Total: s.total,
+                    })), `sales-detailed-${dateFrom}-${dateTo}`)
+                    setExportOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
+                >
+                  <Download size={13} className="text-slate-400 shrink-0" /> Detailed (CSV)
+                </button>
+                <button
+                  onClick={() => {
+                    exportToCSV([
+                      { Metric: 'Gross Sales (incl. tax)', Value: totalRevenue.toFixed(2) },
+                      { Metric: 'Sales EX Tax',            Value: totalExTax.toFixed(2) },
+                      { Metric: 'Refunds',                 Value: refundsTotal.toFixed(2) },
+                      { Metric: 'Net Sales',               Value: netSales.toFixed(2) },
+                      { Metric: 'Discounts',               Value: totalDiscount.toFixed(2) },
+                      { Metric: 'Tax Collected',           Value: totalTax.toFixed(2) },
+                      { Metric: 'COGS',                    Value: totalCOGS.toFixed(2) },
+                      { Metric: 'Gross Profit',            Value: grossProfit.toFixed(2) },
+                      { Metric: 'Margin %',                Value: marginPct.toFixed(1) },
+                      { Metric: 'Transactions',            Value: String(totalTx) },
+                      { Metric: 'Avg. Sale',               Value: avgTx.toFixed(2) },
+                    ], `sales-summary-${dateFrom}-${dateTo}`)
+                    setExportOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
+                >
+                  <FileText size={13} className="text-slate-400 shrink-0" /> Summary (CSV)
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -130,11 +234,19 @@ export default function ReportsPage() {
       {/* Summary tab */}
       {tab === 'summary' && (
         <div className="space-y-4">
+          {/* Row 1 — Revenue KPIs */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <MetricCard label="Net Revenue"    value={formatCurrency(totalRevenue)} sub={`${totalTx} transactions`} />
+            <MetricCard label="Gross Sales (incl. tax)" value={formatCurrency(totalRevenue)} sub={`${totalTx} transactions`} />
+            <MetricCard label="Sales EX Tax"   value={formatCurrency(totalExTax)} />
             <MetricCard label="Avg. Sale"      value={formatCurrency(avgTx)} />
-            <MetricCard label="Total Discount" value={formatCurrency(totalDiscount)} />
-            <MetricCard label="Tax Collected"  value={formatCurrency(sales.reduce((s,r)=>s+r.tax_amount,0))} />
+            <MetricCard label="Net Sales"      value={formatCurrency(netSales)} sub={refundsTotal > 0 ? `after ${formatCurrency(refundsTotal)} refunds` : 'no refunds'} />
+          </div>
+          {/* Row 2 — Cost & Profitability */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MetricCard label="COGS"           value={totalCOGS > 0 ? formatCurrency(totalCOGS) : '—'} sub="cost of goods sold" />
+            <MetricCard label="Gross Profit"   value={totalCOGS > 0 ? formatCurrency(grossProfit) : '—'} sub="sales EX – COGS" />
+            <MetricCard label="Margin %"       value={totalCOGS > 0 ? `${marginPct.toFixed(1)}%` : '—'} sub="gross profit / sales EX" />
+            <MetricCard label="Total Discount" value={formatCurrency(totalDiscount)} sub={`Tax: ${formatCurrency(totalTax)}`} />
           </div>
 
           {trend.labels.length > 1 ? (

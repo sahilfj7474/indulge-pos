@@ -54,3 +54,38 @@ export async function getRegisterHistory(locationId: string, limit = 20): Promis
     .limit(limit)
   return (data ?? []) as unknown as Register[]
 }
+
+export async function getRegisterSalesSummary(locationId: string, openedAt: string) {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('sales')
+    .select('payment_method, total, discount_amount, tax_amount')
+    .eq('location_id', locationId)
+    .eq('status', 'completed')
+    .gte('created_at', openedAt)
+
+  const rows = (data ?? []) as {
+    payment_method: string
+    total: number
+    discount_amount: number
+    tax_amount: number
+  }[]
+
+  const tally: Record<string, number> = {}
+  let totalSales = 0, totalDiscounts = 0, totalTax = 0
+
+  for (const s of rows) {
+    tally[s.payment_method] = (tally[s.payment_method] ?? 0) + s.total
+    totalSales    += s.total
+    totalDiscounts += s.discount_amount
+    totalTax      += s.tax_amount
+  }
+
+  return {
+    tally,
+    totalSales:     parseFloat(totalSales.toFixed(2)),
+    totalDiscounts: parseFloat(totalDiscounts.toFixed(2)),
+    totalTax:       parseFloat(totalTax.toFixed(2)),
+    transactionCount: rows.length,
+  }
+}

@@ -5,10 +5,31 @@ import { InventoryItem, InventoryAdjustment, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getInventory, getAdjustmentHistory } from '@/lib/services/inventory.service'
 import { getLocations } from '@/lib/services/admin.service'
-import { formatDateTime, cn } from '@/lib/utils'
+import { formatDateTime, formatCurrency, cn } from '@/lib/utils'
 import AdjustmentModal from '@/components/inventory/AdjustmentModal'
 import SetStockModal from '@/components/inventory/SetStockModal'
-import { AlertTriangle, Search, History, Package } from 'lucide-react'
+import { AlertTriangle, Search, History, Package, Boxes, DollarSign, TrendingDown, Tag } from 'lucide-react'
+
+function KpiCard({ label, value, sub, icon: Icon, valueClass = 'text-slate-900' }: {
+  label: string
+  value: string | number
+  sub?: string
+  icon: React.ElementType
+  valueClass?: string
+}) {
+  return (
+    <div className="bg-white border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+        <Icon size={18} className="text-blue-500" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-slate-500 mb-0.5">{label}</p>
+        <p className={`text-xl font-bold leading-tight ${valueClass}`}>{value}</p>
+        {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
+      </div>
+    </div>
+  )
+}
 
 export default function InventoryPage() {
   const { user } = useAuth()
@@ -64,7 +85,10 @@ export default function InventoryPage() {
     })
   }, [inventory, search, filter])
 
-  const lowStockCount = inventory.filter(i => i.quantity < i.low_stock_threshold).length
+  const lowStockCount  = inventory.filter(i => i.quantity < i.low_stock_threshold).length
+  const totalQty       = inventory.reduce((s, i) => s + i.quantity, 0)
+  const retailValue    = inventory.reduce((s, i) => s + i.quantity * (i.product?.price ?? 0), 0)
+  const costValue      = inventory.reduce((s, i) => s + i.quantity * (i.product?.cost ?? 0), 0)
   const currentLocationName = isManager
     ? locations.find(l => l.id === effectiveLocationId)?.name ?? ''
     : user?.location?.name ?? ''
@@ -97,6 +121,23 @@ export default function InventoryPage() {
           )}
         </div>
       </div>
+
+      {/* KPI Cards */}
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <KpiCard label="Total Qty on Hand" value={totalQty.toLocaleString()} icon={Boxes} />
+          <KpiCard label="Retail Value" value={formatCurrency(retailValue)} icon={Tag} valueClass="text-blue-600" />
+          <KpiCard label="Cost Value" value={formatCurrency(costValue)} icon={DollarSign} valueClass="text-violet-600" />
+          <KpiCard label="Products Tracked" value={inventory.length} icon={Package} />
+          <KpiCard
+            label="Low Stock"
+            value={lowStockCount}
+            sub={lowStockCount > 0 ? 'needs attention' : 'all OK'}
+            icon={TrendingDown}
+            valueClass={lowStockCount > 0 ? 'text-amber-600' : 'text-green-600'}
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white p-1 rounded-lg w-fit border border-blue-100">

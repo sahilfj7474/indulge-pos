@@ -1,10 +1,13 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Sale } from '@/types'
+import { Sale, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
-import { getSales } from '@/lib/services/sales.service'
+import { getSales, getSaleById } from '@/lib/services/sales.service'
+import { getLocations } from '@/lib/services/admin.service'
 import { formatCurrency, formatDateTime, cn, exportToCSV } from '@/lib/utils'
+import DateRangePicker from '@/components/ui/DateRangePicker'
+import LocationPicker from '@/components/ui/LocationPicker'
 import SaleDetailModal from '@/components/sales/SaleDetailModal'
 import { Search, Download } from 'lucide-react'
 import { canVoidSale } from '@/lib/permissions'
@@ -13,36 +16,55 @@ const STATUS_STYLES: Record<string, string> = {
   completed:      'bg-green-100 text-green-600',
   voided:         'bg-red-100 text-red-500',
   refunded:       'bg-yellow-100 text-yellow-700',
-  partial_refund: 'bg-orange-900/50 text-orange-400',
+  partial_refund: 'bg-orange-100 text-orange-600',
 }
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
 export default function SalesPage() {
   const { user } = useAuth()
-  const [sales, setSales] = useState<Sale[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const isManager = user?.role === 'manager' || user?.role === 'admin'
+
+  const [sales,        setSales]        = useState<Sale[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [methodFilter, setMethodFilter] = useState('')
-  const [dateFrom, setDateFrom] = useState(TODAY)
-  const [dateTo, setDateTo] = useState(TODAY)
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
+  const [dateFrom,     setDateFrom]     = useState(TODAY)
+  const [dateTo,       setDateTo]       = useState(TODAY)
+  const [locations,          setLocations]          = useState<Location[]>([])
+  const [selectedLocationId, setSelectedLocationId] = useState('')
+
+  // Detail panel state
+  const [selectedSale,  setSelectedSale]  = useState<Sale | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1)
+  const [detailLoading, setDetailLoading] = useState(false)
+
+  // '' = All Stores (manager+); non-manager locked to their location
+  const effectiveLocationId = isManager ? selectedLocationId : (user?.location_id ?? '')
+
+  useEffect(() => {
+    if (!isManager) return
+    getLocations().then(locs => {
+      setLocations(locs.filter(l => l.is_active !== false))
+      // start with "All Stores" — selectedLocationId stays ''
+    })
+  }, [isManager]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
     setLoading(true)
     const data = await getSales({
-      locationId: user?.location_id ?? undefined,
-      dateFrom: `${dateFrom}T00:00:00`,
-      dateTo:   `${dateTo}T23:59:59`,
-      status:   statusFilter || undefined,
+      locationId:    effectiveLocationId || undefined,
+      dateFrom:      `${dateFrom}T00:00:00`,
+      dateTo:        `${dateTo}T23:59:59`,
+      status:        statusFilter || undefined,
       paymentMethod: methodFilter || undefined,
     })
     setSales(data)
     setLoading(false)
   }
 
-  useEffect(() => { if (user) load() }, [user, dateFrom, dateTo, statusFilter, methodFilter])
+  useEffect(() => { if (user) load() }, [user, effectiveLocationId, dateFrom, dateTo, statusFilter, methodFilter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     if (!search) return sales
@@ -50,27 +72,44 @@ export default function SalesPage() {
     return sales.filter(s =>
       s.id.slice(0, 8).toLowerCase().includes(q) ||
       (s.customer as unknown as { full_name: string })?.full_name?.toLowerCase().includes(q) ||
-      (s.user as unknown as { full_name: string })?.full_name?.toLowerCase().includes(q)
+      (s.user    as unknown as { full_name: string })?.full_name?.toLowerCase().includes(q)
     )
   }, [sales, search])
 
   const totals = useMemo(() => ({
-    count: filtered.filter(s => s.status === 'completed').length,
+    count:   filtered.filter(s => s.status === 'completed').length,
     revenue: filtered.filter(s => s.status === 'completed').reduce((s, r) => s + r.total, 0),
   }), [filtered])
 
+  async function openDetail(sale: Sale, index: number) {
+    setSelectedIndex(index)
+    setSelectedSale(sale) // show immediately with list data
+    setDetailLoading(true)
+    try {
+      const full = await getSaleById(sale.id)
+      if (full) setSelectedSale(full)
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  async function navigateTo(index: number) {
+    if (index < 0 || index >= filtered.length) return
+    await openDetail(filtered[index], index)
+  }
+
   function handleExport() {
     exportToCSV(filtered.map(s => ({
-      'Receipt #':      s.id.slice(0, 8).toUpperCase(),
-      'Date':           formatDateTime(s.created_at),
-      'Cashier':        (s.user as unknown as { full_name: string })?.full_name ?? '',
-      'Customer':       (s.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in',
-      'Payment':        s.payment_method,
-      'Subtotal':       s.subtotal,
-      'Discount':       s.discount_amount,
-      'Tax':            s.tax_amount,
-      'Total':          s.total,
-      'Status':         s.status,
+      'Receipt #':  s.id.slice(0, 8).toUpperCase(),
+      'Date':       formatDateTime(s.created_at),
+      'Cashier':    (s.user as unknown as { full_name: string })?.full_name ?? '',
+      'Customer':   (s.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in',
+      'Payment':    s.payment_method,
+      'Subtotal':   s.subtotal,
+      'Discount':   s.discount_amount,
+      'Tax':        s.tax_amount,
+      'Total':      s.total,
+      'Status':     s.status,
     })), `sales-${dateFrom}-to-${dateTo}`)
   }
 
@@ -83,12 +122,26 @@ export default function SalesPage() {
             {totals.count} transactions · {formatCurrency(totals.revenue)} revenue
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
-        >
-          <Download size={14} /> Export CSV
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {isManager && locations.length > 0 && (
+            <LocationPicker
+              locations={locations}
+              selectedId={selectedLocationId}
+              onChange={setSelectedLocationId}
+            />
+          )}
+          <DateRangePicker
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onChange={(from, to) => { setDateFrom(from); setDateTo(to) }}
+          />
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -103,10 +156,6 @@ export default function SalesPage() {
             className="w-full pl-9 pr-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-          className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="px-3 py-2 bg-white border border-blue-100 rounded-lg text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">All status</option>
@@ -143,21 +192,36 @@ export default function SalesPage() {
               <tr><td colSpan={7} className="text-center py-12 text-slate-400">Loading...</td></tr>
             ) : filtered.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-12 text-slate-400">No sales found for this period</td></tr>
-            ) : filtered.map(sale => (
+            ) : filtered.map((sale, idx) => (
               <tr
                 key={sale.id}
-                onClick={() => setSelectedSale(sale)}
-                className="border-b border-blue-200/50 hover:bg-blue-50/40 cursor-pointer transition-colors"
+                onClick={() => openDetail(sale, idx)}
+                className={cn(
+                  'border-b border-blue-200/50 cursor-pointer transition-colors',
+                  selectedSale?.id === sale.id
+                    ? 'bg-blue-50'
+                    : 'hover:bg-blue-50/40'
+                )}
               >
-                <td className="px-4 py-3 font-mono text-blue-500 text-xs">{sale.id.slice(0, 8).toUpperCase()}</td>
+                <td className="px-4 py-3 font-mono text-blue-500 text-xs font-semibold">
+                  {sale.id.slice(0, 8).toUpperCase()}
+                </td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{formatDateTime(sale.created_at)}</td>
-                <td className="px-4 py-3 text-slate-600">{(sale.user as unknown as { full_name: string })?.full_name ?? '—'}</td>
-                <td className="px-4 py-3 text-slate-600">{(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}</td>
-                <td className="px-4 py-3 text-slate-500 capitalize">{sale.payment_method.replace('_', ' ')}</td>
-                <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatCurrency(sale.total)}</td>
+                <td className="px-4 py-3 text-slate-600">
+                  {(sale.user as unknown as { full_name: string })?.full_name ?? '—'}
+                </td>
+                <td className="px-4 py-3 text-slate-600">
+                  {(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}
+                </td>
+                <td className="px-4 py-3 text-slate-500 capitalize">
+                  {sale.payment_method.replace('_', ' ')}
+                </td>
+                <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                  {formatCurrency(sale.total)}
+                </td>
                 <td className="px-4 py-3 text-center">
                   <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[sale.status] ?? '')}>
-                    {sale.status}
+                    {sale.status.replace('_', ' ')}
                   </span>
                 </td>
               </tr>
@@ -166,16 +230,28 @@ export default function SalesPage() {
         </table>
       </div>
 
+      {/* Detail panel */}
       {selectedSale && user && (
         <SaleDetailModal
           sale={selectedSale}
           userId={user.id}
           canVoid={canVoidSale(user.role)}
           canRefund={canVoidSale(user.role)}
-          onClose={() => setSelectedSale(null)}
-          onVoided={load}
-          onRefunded={load}
+          onClose={() => { setSelectedSale(null); setSelectedIndex(-1) }}
+          onVoided={() => { load(); setSelectedSale(null) }}
+          onRefunded={() => { load() }}
+          onPrev={() => navigateTo(selectedIndex - 1)}
+          onNext={() => navigateTo(selectedIndex + 1)}
+          hasPrev={selectedIndex > 0}
+          hasNext={selectedIndex < filtered.length - 1}
         />
+      )}
+
+      {/* Loading overlay when navigating */}
+      {detailLoading && selectedSale && (
+        <div className="fixed bottom-4 right-4 z-[60] bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full shadow-lg">
+          Loading details...
+        </div>
       )}
     </div>
   )

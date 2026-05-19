@@ -15,7 +15,7 @@ export default function CategoryFilter({ categories, selected, onSelect }: Props
       <button
         onClick={() => onSelect(null)}
         className={cn(
-          'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+          'px-4 py-2.5 rounded-full text-sm font-medium transition-colors active:scale-95',
           selected === null
             ? 'bg-blue-600 text-white'
             : 'bg-blue-50 text-slate-500 hover:text-slate-800 hover:bg-blue-100'
@@ -28,7 +28,7 @@ export default function CategoryFilter({ categories, selected, onSelect }: Props
           key={cat.id}
           onClick={() => onSelect(cat.id)}
           className={cn(
-            'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+            'px-4 py-2.5 rounded-full text-sm font-medium transition-colors active:scale-95',
             selected === cat.id
               ? 'text-white'
               : 'bg-blue-50 text-slate-500 hover:text-slate-800 hover:bg-blue-100'

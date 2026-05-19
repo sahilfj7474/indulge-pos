@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -7,16 +7,14 @@ import { getNavItems } from '@/lib/permissions'
 import {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings, LogOut,
-  DollarSign, BookOpen, ClipboardList, ArrowLeftRight,
-  Truck, ShoppingBag, PauseCircle, Zap,
+  DollarSign, LayoutDashboard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const ICONS: Record<string, React.ElementType> = {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings,
-  DollarSign, BookOpen, ClipboardList, ArrowLeftRight,
-  Truck, ShoppingBag, PauseCircle, Zap,
+  DollarSign, LayoutDashboard,
 }
 
 export default function Sidebar() {
@@ -26,8 +24,7 @@ export default function Sidebar() {
   if (!user) return null
 
   const navItems = getNavItems(user.role)
-  const sidebarItems = navItems.filter(i => i.label !== 'Held Orders')
-  const groups = Array.from(new Set(sidebarItems.map(i => i.group ?? 'Other')))
+  const groups = Array.from(new Set(navItems.map(i => i.group ?? 'Other')))
 
   return (
     <aside className="w-56 bg-blue-900 flex flex-col">
@@ -40,7 +37,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 py-3 overflow-y-auto px-2">
         {groups.map(group => {
-          const items = sidebarItems.filter(i => (i.group ?? 'Other') === group)
+          const items = navItems.filter(i => (i.group ?? 'Other') === group)
           return (
             <div key={group} className="mb-3">
               <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-blue-400">
@@ -54,13 +51,13 @@ export default function Sidebar() {
                     key={item.href + item.label}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                      'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
                       active
                         ? 'bg-blue-600 text-white shadow-sm'
                         : 'text-blue-200 hover:text-white hover:bg-blue-800'
                     )}
                   >
-                    {Icon && <Icon size={16} />}
+                    {Icon && <Icon size={18} />}
                     {item.label}
                   </Link>
                 )
@@ -78,9 +75,9 @@ export default function Sidebar() {
         </div>
         <button
           onClick={signOut}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-blue-300 hover:text-white hover:bg-blue-800 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-sm text-blue-300 hover:text-white hover:bg-blue-800 transition-colors"
         >
-          <LogOut size={16} />
+          <LogOut size={18} />
           Sign Out
         </button>
       </div>

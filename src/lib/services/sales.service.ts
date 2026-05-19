@@ -32,10 +32,16 @@ export async function getSaleById(id: string): Promise<Sale | null> {
   const supabase = createClient()
   const { data } = await supabase
     .from('sales')
-    .select('*, user:users(full_name), customer:customers(full_name, loyalty_points), location:locations(*), items:sale_items(*, product:products(name, price))')
+    .select('*, user:users(full_name), customer:customers(full_name, loyalty_points), location:locations(*), items:sale_items(*, product:products(name, price, sku, image_url))')
     .eq('id', id)
     .single()
   return data as unknown as Sale | null
+}
+
+export async function updateSaleNotes(saleId: string, notes: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.from('sales').update({ notes }).eq('id', saleId)
+  if (error) throw new Error(error.message)
 }
 
 export async function voidSale(saleId: string): Promise<void> {

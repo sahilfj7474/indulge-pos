@@ -66,8 +66,11 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
       <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100">
           <h2 className="text-lg font-semibold text-slate-900">Payment</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
-            <X size={18} />
+          <button
+            onClick={onClose}
+            className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+          >
+            <X size={20} />
           </button>
         </div>
 
@@ -85,17 +88,17 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => setIsSplit(false)}
-              className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+              className={cn('flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 !isSplit ? 'bg-blue-600 text-white' : 'bg-blue-50 text-slate-500 hover:text-slate-800')}
             >
               Single
             </button>
             <button
               onClick={() => setIsSplit(true)}
-              className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+              className={cn('flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isSplit ? 'bg-blue-600 text-white' : 'bg-blue-50 text-slate-500 hover:text-slate-800')}
             >
-              <Split size={12} /> Split
+              <Split size={14} /> Split
             </button>
           </div>
 
@@ -113,7 +116,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                       disabled={disabled}
                       title={disabled ? 'Select a customer first' : undefined}
                       className={cn(
-                        'flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors',
+                        'flex items-center gap-2.5 px-3 py-3.5 rounded-xl border text-sm font-semibold transition-colors active:scale-[0.97]',
                         method === m.value
                           ? 'bg-blue-600 border-blue-500 text-white'
                           : disabled
@@ -121,7 +124,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                             : 'bg-blue-50 border-blue-200 text-slate-500 hover:text-slate-800 hover:border-blue-300'
                       )}
                     >
-                      <Icon size={15} />{m.label}
+                      <Icon size={17} />{m.label}
                     </button>
                   )
                 })}
@@ -140,7 +143,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                     autoFocus
                     value={tendered}
                     onChange={e => setTendered(e.target.value)}
-                    className="w-full px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-3 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0.00"
                   />
                   {parseFloat(tendered || '0') >= total && (
@@ -205,7 +208,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
           <button
             onClick={handleConfirm}
             disabled={!singleCanComplete}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold rounded-lg transition-colors"
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 text-white text-base font-bold rounded-xl transition-colors"
           >
             Complete Sale
           </button>
