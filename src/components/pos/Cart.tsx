@@ -86,6 +86,8 @@ export default function Cart({
   onHold,
 }: Props) {
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set())
+  const [editingQtyIndex, setEditingQtyIndex] = useState<number | null>(null)
+  const [editingQtyValue, setEditingQtyValue] = useState('')
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
     items, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount, taxRate, taxInclusive
   )
@@ -98,6 +100,23 @@ export default function Cart({
       next.has(i) ? next.delete(i) : next.add(i)
       return next
     })
+  }
+
+  function startEditQty(i: number, current: number) {
+    setEditingQtyIndex(i)
+    setEditingQtyValue(String(current))
+  }
+
+  function commitEditQty(i: number) {
+    const qty = parseInt(editingQtyValue, 10)
+    if (!isNaN(qty) && qty > 0) onQtyChange(i, qty)
+    setEditingQtyIndex(null)
+    setEditingQtyValue('')
+  }
+
+  function handleQtyKeyDown(e: React.KeyboardEvent, i: number) {
+    if (e.key === 'Enter') commitEditQty(i)
+    if (e.key === 'Escape') { setEditingQtyIndex(null); setEditingQtyValue('') }
   }
 
   return (
@@ -142,7 +161,29 @@ export default function Cart({
                 >
                   <Minus size={16} />
                 </button>
-                <span className="text-base font-semibold w-7 text-center text-slate-900">{item.quantity}</span>
+
+                {/* Tap quantity to type a number directly */}
+                {editingQtyIndex === i ? (
+                  <input
+                    type="number"
+                    autoFocus
+                    min={1}
+                    value={editingQtyValue}
+                    onChange={e => setEditingQtyValue(e.target.value)}
+                    onBlur={() => commitEditQty(i)}
+                    onKeyDown={e => handleQtyKeyDown(e, i)}
+                    className="w-12 h-11 text-base font-semibold text-center text-slate-900 bg-white border-2 border-blue-500 rounded-lg focus:outline-none"
+                  />
+                ) : (
+                  <button
+                    onClick={() => startEditQty(i, item.quantity)}
+                    title="Tap to set quantity"
+                    className="w-12 h-11 text-base font-semibold text-center text-slate-900 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 rounded-lg border border-blue-200 transition-colors"
+                  >
+                    {item.quantity}
+                  </button>
+                )}
+
                 <button
                   onClick={() => onQtyChange(i, item.quantity + 1)}
                   className="w-11 h-11 rounded-lg bg-blue-100 hover:bg-blue-200 active:bg-blue-300 flex items-center justify-center"
