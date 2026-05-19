@@ -5,7 +5,7 @@ import { Promotion, getPromotions, createPromotion, updatePromotion, deletePromo
 import { getCategories } from '@/lib/services/admin.service'
 import { getAllProducts } from '@/lib/services/admin.service'
 import { Category, Product } from '@/types'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency, cn, localToday } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Zap, ToggleLeft, ToggleRight } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import toast from 'react-hot-toast'
@@ -88,7 +88,7 @@ export default function PromotionsPage() {
     load()
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localToday()
 
   function isLive(p: Promotion) {
     if (!p.is_active) return false

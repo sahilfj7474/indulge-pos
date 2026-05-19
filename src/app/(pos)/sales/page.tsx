@@ -5,7 +5,7 @@ import { Sale, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getSales, getSaleById } from '@/lib/services/sales.service'
 import { getLocations } from '@/lib/services/admin.service'
-import { formatCurrency, formatDateTime, cn, exportToCSV } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, exportToCSV, localToday, localDayStart, localDayEnd } from '@/lib/utils'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import LocationPicker from '@/components/ui/LocationPicker'
 import SaleDetailModal from '@/components/sales/SaleDetailModal'
@@ -19,7 +19,7 @@ const STATUS_STYLES: Record<string, string> = {
   partial_refund: 'bg-orange-100 text-orange-600',
 }
 
-const TODAY = new Date().toISOString().slice(0, 10)
+const TODAY = localToday()
 
 export default function SalesPage() {
   const { user } = useAuth()
@@ -55,8 +55,8 @@ export default function SalesPage() {
     setLoading(true)
     const data = await getSales({
       locationId:    effectiveLocationId || undefined,
-      dateFrom:      `${dateFrom}T00:00:00`,
-      dateTo:        `${dateTo}T23:59:59`,
+      dateFrom:      localDayStart(dateFrom),
+      dateTo:        localDayEnd(dateTo),
       status:        statusFilter || undefined,
       paymentMethod: methodFilter || undefined,
     })

@@ -2,15 +2,32 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, localToday } from '@/lib/utils'
 
-const TODAY         = new Date().toISOString().slice(0, 10)
-const YESTERDAY     = (() => { const d = new Date(); d.setDate(d.getDate() - 1);   return d.toISOString().slice(0, 10) })()
-const LAST7_START   = (() => { const d = new Date(); d.setDate(d.getDate() - 6);   return d.toISOString().slice(0, 10) })()
-const LAST30_START  = (() => { const d = new Date(); d.setDate(d.getDate() - 29);  return d.toISOString().slice(0, 10) })()
+// All date calculations use LOCAL timezone (not UTC) so "Today" is correct
+// even in UTC+12 where new Date().toISOString() would give yesterday's UTC date.
+function localOffset(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+}
+
+const TODAY         = localToday()
+const YESTERDAY     = localOffset(-1)
+const LAST7_START   = localOffset(-6)
+const LAST30_START  = localOffset(-29)
 const THIS_MONTH    = TODAY.slice(0, 7) + '-01'
-const LAST_MONTH_S  = (() => { const d = new Date(); d.setMonth(d.getMonth() - 1, 1); return d.toISOString().slice(0, 10) })()
-const LAST_MONTH_E  = (() => { const d = new Date(); d.setDate(0); return d.toISOString().slice(0, 10) })()
+const LAST_MONTH_S  = (() => {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() - 1)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+})()
+const LAST_MONTH_E  = (() => {
+  const d = new Date()
+  d.setDate(0) // last day of previous month
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+})()
 
 const PRESETS = [
   { label: 'Today',        from: TODAY,        to: TODAY },

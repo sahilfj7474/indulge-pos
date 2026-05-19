@@ -4,6 +4,35 @@ export function cn(...inputs: ClassValue[]) {
   return inputs.filter(Boolean).join(' ')
 }
 
+/**
+ * Returns today's date as YYYY-MM-DD in the browser's LOCAL timezone.
+ * Unlike new Date().toISOString().slice(0,10) which gives the UTC date,
+ * this correctly returns e.g. "2026-05-20" when it's 11am in Fiji (UTC+12)
+ * even though UTC is still "2026-05-19".
+ */
+export function localToday(): string {
+  const d = new Date()
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+}
+
+/**
+ * Convert a local YYYY-MM-DD date to a UTC ISO string representing the
+ * START of that day (00:00:00) in the user's local timezone.
+ * Use this for Supabase .gte('created_at', ...) queries.
+ */
+export function localDayStart(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00`).toISOString()
+}
+
+/**
+ * Convert a local YYYY-MM-DD date to a UTC ISO string representing the
+ * END of that day (23:59:59) in the user's local timezone.
+ * Use this for Supabase .lte('created_at', ...) queries.
+ */
+export function localDayEnd(dateStr: string): string {
+  return new Date(`${dateStr}T23:59:59`).toISOString()
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-FJ', {
     style: 'currency',

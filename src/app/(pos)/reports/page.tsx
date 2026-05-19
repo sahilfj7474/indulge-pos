@@ -9,7 +9,7 @@ import {
 } from '@/lib/services/reports.service'
 import { getLocations } from '@/lib/services/admin.service'
 import { Location } from '@/types'
-import { formatCurrency, exportToCSV, cn } from '@/lib/utils'
+import { formatCurrency, exportToCSV, cn, localToday } from '@/lib/utils'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import LocationPicker from '@/components/ui/LocationPicker'
 import ZReportModal from '@/components/reports/ZReportModal'
@@ -22,7 +22,7 @@ import { Download, FileText, TrendingUp, Package, Users, CreditCard, Clock, Chev
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
 
-const TODAY = new Date().toISOString().slice(0, 10)
+const TODAY = localToday()
 const CHART_COLORS = ['#6366f1','#3b82f6','#10b981','#f97316','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#6b7280']
 
 type Tab = 'summary' | 'products' | 'categories' | 'staff' | 'payments' | 'hourly' | 'zreport'

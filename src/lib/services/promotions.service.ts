@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { CartItem } from '@/types'
+import { localToday } from '@/lib/utils'
 
 export interface Promotion {
   id: string
@@ -27,7 +28,7 @@ export async function getPromotions(): Promise<Promotion[]> {
 
 export async function getActivePromotions(): Promise<Promotion[]> {
   const supabase = createClient()
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localToday()
   const { data } = await supabase
     .from('promotions')
     .select('*')

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { localDayStart, localDayEnd } from '@/lib/utils'
 
 export interface SaleRow {
   id: string
@@ -30,8 +31,8 @@ export async function fetchSalesForReport(
       items:sale_items(product_id, quantity, total, product:products(name, category_id, cost, category:categories(name)))
     `)
     .eq('status', 'completed')
-    .gte('created_at', `${dateFrom}T00:00:00`)
-    .lte('created_at', `${dateTo}T23:59:59`)
+    .gte('created_at', localDayStart(dateFrom))
+    .lte('created_at', localDayEnd(dateTo))
     .order('created_at')
     .limit(2000)
   if (locationId) query = query.eq('location_id', locationId)
@@ -137,8 +138,8 @@ export async function getDashboardStats(locationId: string, dateFrom: string, da
     .from('sales')
     .select('total, tax_amount, discount_amount, items:sale_items(quantity, product:products(cost))')
     .eq('status', 'completed')
-    .gte('created_at', `${dateFrom}T00:00:00`)
-    .lte('created_at', `${dateTo}T23:59:59`)
+    .gte('created_at', localDayStart(dateFrom))
+    .lte('created_at', localDayEnd(dateTo))
   if (locationId) salesQuery = salesQuery.eq('location_id', locationId)
 
   const [salesRes, customersRes] = await Promise.all([
@@ -187,8 +188,8 @@ export async function getRefundsTotal(locationId: string, dateFrom: string, date
   let salesQuery = supabase
     .from('sales')
     .select('id')
-    .gte('created_at', `${dateFrom}T00:00:00`)
-    .lte('created_at', `${dateTo}T23:59:59`)
+    .gte('created_at', localDayStart(dateFrom))
+    .lte('created_at', localDayEnd(dateTo))
     .in('status', ['refunded', 'partial_refund'])
   if (locationId) salesQuery = salesQuery.eq('location_id', locationId)
   const { data: sales } = await salesQuery

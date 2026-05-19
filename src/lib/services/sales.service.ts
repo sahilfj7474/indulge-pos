@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { Sale } from '@/types'
+import { localDayStart, localDayEnd } from '@/lib/utils'
 
 export interface SaleFilters {
   locationId?: string
@@ -55,8 +56,8 @@ export async function voidSale(saleId: string): Promise<void> {
 
 export async function getDailySummary(locationId: string, date: string) {
   const supabase = createClient()
-  const start = `${date}T00:00:00`
-  const end   = `${date}T23:59:59`
+  const start = localDayStart(date)
+  const end   = localDayEnd(date)
 
   const { data } = await supabase
     .from('sales')

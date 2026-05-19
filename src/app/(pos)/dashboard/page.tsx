@@ -8,6 +8,7 @@ import {
   aggregateHourly, SaleRow,
 } from '@/lib/services/reports.service'
 import { getLocations } from '@/lib/services/admin.service'
+import { localToday } from '@/lib/utils'
 import { Location } from '@/types'
 import { formatCurrency } from '@/lib/utils'
 import DateRangePicker from '@/components/ui/DateRangePicker'
@@ -24,7 +25,7 @@ ChartJS.register(
   BarElement, ArcElement, Title, Tooltip, Legend, Filler
 )
 
-const TODAY = new Date().toISOString().slice(0, 10)
+const TODAY = localToday()
 
 const CHART_OPTIONS = {
   responsive: true,
