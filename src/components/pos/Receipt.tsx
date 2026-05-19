@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
@@ -23,6 +23,31 @@ interface Props {
   onClose: () => void
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const W = 40 // receipt character width
+
+const DIV  = '-'.repeat(W)   // thin divider
+const HDIV = '='.repeat(W)   // heavy divider
+
+function center(text: string) {
+  const pad = Math.max(0, Math.floor((W - text.length) / 2))
+  return ' '.repeat(pad) + text
+}
+
+function Row({ label, value, bold, className }: {
+  label: string; value: string; bold?: boolean; className?: string
+}) {
+  return (
+    <div className={`flex justify-between ${bold ? 'font-bold' : ''} ${className ?? ''}`}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  )
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function Receipt({
   sale,
   items,
@@ -44,22 +69,26 @@ export default function Receipt({
   const change = sale.payment_method === 'cash'
     ? Math.max(0, amountTendered - sale.total)
     : 0
-
   const surcharge = (sale as any).surcharge_amount ?? 0
 
-  const storeName = settings.store_name || location.name
-  const businessAddress = settings.business_address || location.address || ''
-  const businessPhone = settings.business_phone || location.phone || ''
-  const businessEmail = settings.business_email || ''
-  const vatNumber = settings.vat_number || ''
-  const receiptHeader = settings.receipt_header || ''
-  const receiptFooter = settings.receipt_footer || 'Thank you for your purchase!'
-  const taxLabel = `${+(taxRate * 100).toFixed(4)}% VAT${taxInclusive ? ' (incl.)' : ''}`
+  const storeName      = settings.store_name      || location.name
+  const businessAddr   = settings.business_address || location.address || ''
+  const businessPhone  = settings.business_phone   || location.phone   || ''
+  const businessEmail  = settings.business_email   || ''
+  const vatNumber      = settings.vat_number       || ''
+  const receiptHeader  = settings.receipt_header   || ''
+  const receiptFooter  = settings.receipt_footer   || 'Thank you for your purchase!'
+  const taxPct         = +(taxRate * 100).toFixed(4)
+  const taxLabel       = `${taxPct}% VAT${taxInclusive ? ' (INCL.)' : ''}`
+
+  const dateStr    = formatDateTime(sale.created_at)
+  const receiptNum = sale.id.slice(0, 8).toUpperCase()
 
   return (
     <div className="fixed inset-0 bg-blue-950/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100">
+      <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100 shrink-0">
           <h2 className="text-lg font-semibold text-slate-900">Receipt</h2>
           <div className="flex items-center gap-2">
             <button
@@ -74,113 +103,150 @@ export default function Receipt({
           </div>
         </div>
 
-        <div className="p-4 max-h-[70vh] overflow-y-auto">
-          <div ref={ref} className="receipt-print bg-white text-black p-4 font-mono text-xs">
-            <div className="text-center mb-3">
+        {/* Scrollable receipt area */}
+        <div className="overflow-y-auto p-4">
+          {/* ── Printable content ────────────────────────────── */}
+          <div
+            ref={ref}
+            className="receipt-print bg-white text-black font-mono text-[11px] leading-snug"
+            style={{ width: '100%', maxWidth: 320 }}
+          >
+            {/* ── HEADER ── */}
+            <div className="text-center mb-1">
               <img
                 src="/logo-black.png"
                 alt="Indulge"
-                className="h-14 w-auto mx-auto mb-2 object-contain"
+                className="h-12 w-auto mx-auto mb-1 object-contain"
               />
-              <p className="text-base font-bold">{storeName}</p>
-              {businessAddress && <p>{businessAddress}</p>}
+              <p className="font-bold text-sm tracking-wide">{storeName.toUpperCase()}</p>
+              {businessAddr  && <p>{businessAddr}</p>}
               {businessPhone && <p>Tel: {businessPhone}</p>}
               {businessEmail && <p>{businessEmail}</p>}
-              {vatNumber && <p>VAT Reg: {vatNumber}</p>}
-              {receiptHeader && <p className="mt-1 italic">{receiptHeader}</p>}
-              <p className="mt-1">{'='.repeat(36)}</p>
+              {vatNumber     && <p>VAT Reg: {vatNumber}</p>}
+              {receiptHeader && <p className="mt-0.5 italic">{receiptHeader}</p>}
             </div>
 
-            <p>{formatDateTime(sale.created_at)}</p>
-            <p>Receipt: {sale.id.slice(0, 8).toUpperCase()}</p>
-            <p>Cashier: {cashier.full_name}</p>
-            {customer && <p>Customer: {customer.full_name}</p>}
-            <p className="my-2">{'='.repeat(36)}</p>
+            {/* ── TAX INVOICE title ── */}
+            <p>{HDIV}</p>
+            <p className="text-center font-bold tracking-widest">TAX INVOICE</p>
+            <p>{HDIV}</p>
 
-            <div className="space-y-1">
+            {/* ── Transaction meta ── */}
+            <div className="space-y-0.5 my-1">
+              <Row label="Date:"     value={dateStr}   />
+              <Row label="Receipt#:" value={receiptNum} />
+              <Row label="Cashier:"  value={cashier.full_name} />
+              {customer && <Row label="Customer:" value={customer.full_name} />}
+            </div>
+
+            {/* ── Items ── */}
+            <p>{DIV}</p>
+            <p className="font-bold my-0.5">ITEMS</p>
+            <p>{DIV}</p>
+
+            <div className="space-y-1.5 my-1">
               {items.map((item, i) => {
                 const lineTotal = item.unit_price * item.quantity - item.discount_amount
                 return (
                   <div key={i}>
-                    <p className="truncate">{item.product.name}</p>
-                    <div className="flex justify-between pl-2">
-                      <span>{item.quantity} x {formatCurrency(item.unit_price)}</span>
-                      <span>{formatCurrency(lineTotal)}</span>
-                    </div>
+                    <p className="font-semibold truncate">{item.product.name}</p>
+                    <Row
+                      label={`  ${item.quantity} x ${formatCurrency(item.unit_price)}`}
+                      value={formatCurrency(lineTotal)}
+                    />
                     {item.discount_amount > 0 && (
-                      <p className="pl-2 text-slate-400">Disc: -{formatCurrency(item.discount_amount)}</p>
+                      <p className="pl-2">  Disc: -{formatCurrency(item.discount_amount)}</p>
                     )}
-                    {item.note && <p className="pl-2 text-slate-400 italic">* {item.note}</p>}
+                    {item.note && (
+                      <p className="pl-2 italic">  * {item.note}</p>
+                    )}
                   </div>
                 )
               })}
             </div>
 
-            <p className="my-2">{'='.repeat(36)}</p>
-
-            <div className="space-y-0.5">
-              <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(sale.subtotal)}</span></div>
+            {/* ── Totals ── */}
+            <p>{DIV}</p>
+            <div className="space-y-0.5 my-1">
+              <Row label="Subtotal"  value={formatCurrency(sale.subtotal)} />
               {sale.discount_amount > 0 && (
-                <div className="flex justify-between"><span>Discount</span><span>-{formatCurrency(sale.discount_amount)}</span></div>
+                <Row label="Discount" value={`-${formatCurrency(sale.discount_amount)}`} />
               )}
               {loyaltyPointsRedeemed > 0 && (
-                <div className="flex justify-between"><span>Points Redeemed</span><span>-{formatCurrency(loyaltyPointsRedeemed)}</span></div>
+                <Row label="Points Redeemed" value={`-${formatCurrency(loyaltyPointsRedeemed)}`} />
               )}
-              <div className="flex justify-between">
-                <span>{taxLabel}</span>
-                <span>{formatCurrency(sale.tax_amount)}</span>
-              </div>
+              <Row label={taxLabel} value={formatCurrency(sale.tax_amount)} />
               {surcharge > 0 && (
-                <div className="flex justify-between"><span>Surcharge</span><span>+{formatCurrency(surcharge)}</span></div>
+                <Row label="Surcharge" value={`+${formatCurrency(surcharge)}`} />
               )}
-              <div className="flex justify-between font-bold text-sm">
-                <span>TOTAL</span><span>{formatCurrency(sale.total)}</span>
-              </div>
             </div>
+            <p>{HDIV}</p>
+            <div className="flex justify-between font-bold text-sm my-1 tracking-wide">
+              <span>{center('TOTAL').trimStart()}</span>
+              <span>{formatCurrency(sale.total)}</span>
+            </div>
+            <p>{HDIV}</p>
 
-            <p className="my-2">{'='.repeat(36)}</p>
-
-            <div className="space-y-0.5">
+            {/* ── Payment ── */}
+            <div className="space-y-0.5 my-1">
               {splitPayments && splitPayments.length > 0 ? (
-                splitPayments.map((sp, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className="capitalize">{sp.method.replace('_', ' ')}</span>
-                    <span>{formatCurrency(sp.amount)}</span>
-                  </div>
-                ))
+                <>
+                  <p className="font-semibold">SPLIT PAYMENT:</p>
+                  {splitPayments.map((sp, i) => (
+                    <Row
+                      key={i}
+                      label={`  ${sp.method.replace(/_/g, ' ').toUpperCase()}`}
+                      value={formatCurrency(sp.amount)}
+                    />
+                  ))}
+                </>
               ) : sale.payment_method === 'account' ? (
-                <div className="flex justify-between">
-                  <span>Charged to Account</span>
-                  <span>{formatCurrency(sale.total)}</span>
-                </div>
+                <>
+                  <Row label="Charged to Account" value={formatCurrency(sale.total)} />
+                  {customer && <p className="pl-2 italic">  {customer.full_name}</p>}
+                </>
               ) : (
                 <>
-                  <div className="flex justify-between">
-                    <span>Payment</span>
-                    <span className="capitalize">{sale.payment_method.replace('_', ' ')}</span>
-                  </div>
+                  <Row
+                    label="Payment Method"
+                    value={sale.payment_method.replace(/_/g, ' ').toUpperCase()}
+                  />
+                  {surcharge > 0 && (
+                    <Row label="  Incl. Surcharge" value={`+${formatCurrency(surcharge)}`} />
+                  )}
                   {sale.payment_method === 'cash' && (
                     <>
-                      <div className="flex justify-between"><span>Tendered</span><span>{formatCurrency(amountTendered)}</span></div>
-                      <div className="flex justify-between"><span>Change</span><span>{formatCurrency(change)}</span></div>
+                      <Row label="Tendered" value={formatCurrency(amountTendered)} />
+                      <Row label="Change"   value={formatCurrency(change)} bold />
                     </>
                   )}
                 </>
               )}
             </div>
 
+            {/* ── Loyalty ── */}
             {customer && (
               <>
-                <p className="my-2">{'='.repeat(36)}</p>
-                <div className="space-y-0.5">
-                  {loyaltyPointsEarned > 0 && <p>Points Earned: +{loyaltyPointsEarned}</p>}
-                  <p>Points Balance: {customer.loyalty_points + loyaltyPointsEarned - loyaltyPointsRedeemed}</p>
+                <p>{DIV}</p>
+                <div className="space-y-0.5 my-1">
+                  {loyaltyPointsEarned > 0 && (
+                    <Row label="Points Earned" value={`+${loyaltyPointsEarned} pts`} />
+                  )}
+                  <Row
+                    label="Points Balance"
+                    value={`${customer.loyalty_points + loyaltyPointsEarned - loyaltyPointsRedeemed} pts`}
+                  />
                 </div>
               </>
             )}
 
-            <p className="my-2">{'='.repeat(36)}</p>
-            <p className="text-center">{receiptFooter}</p>
+            {/* ── Footer ── */}
+            <p>{DIV}</p>
+            <div className="text-center my-1 space-y-0.5">
+              <p className="font-bold">{center(`* ${receiptFooter} *`)}</p>
+              <p>{center('Please visit us again!')}</p>
+            </div>
+            <p>{DIV}</p>
           </div>
         </div>
       </div>
@@ -188,7 +254,16 @@ export default function Receipt({
       <style jsx global>{`
         @media print {
           body > * { display: none !important; }
-          .receipt-print { display: block !important; }
+          .receipt-print {
+            display: block !important;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            width: 100%;
+            padding: 4px;
+          }
         }
       `}</style>
     </div>
