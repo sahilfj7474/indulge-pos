@@ -6,6 +6,10 @@ import { Toaster } from 'react-hot-toast'
 export const metadata: Metadata = {
   title: 'Indulge POS',
   description: 'Point of Sale System',
+  icons: {
+    icon: '/logo-black.png',
+    apple: '/logo-black.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

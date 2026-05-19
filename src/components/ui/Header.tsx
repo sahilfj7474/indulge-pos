@@ -15,7 +15,11 @@ export default function Header() {
 
   return (
     <header className="h-14 bg-white border-b border-blue-100 flex items-center justify-between px-6 shadow-sm">
-      <div />
+      <img
+        src="/logo-black.png"
+        alt="Indulge POS"
+        className="h-8 w-auto object-contain"
+      />
       <div className="flex items-center gap-4 text-sm text-slate-500">
         <span>{formatDateTime(now)}</span>
         {user && (

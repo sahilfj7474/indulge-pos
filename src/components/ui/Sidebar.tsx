@@ -29,9 +29,13 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-blue-900 flex flex-col">
       {/* Logo / branding */}
-      <div className="px-5 py-4 border-b border-blue-800">
-        <h1 className="text-lg font-bold text-white tracking-tight">Indulge POS</h1>
-        <p className="text-xs text-blue-300 mt-0.5">{user.location?.name ?? 'No Location'}</p>
+      <div className="px-4 py-4 border-b border-blue-800">
+        <img
+          src="/logo-white.png"
+          alt="Indulge POS"
+          className="h-10 w-auto object-contain"
+        />
+        <p className="text-xs text-blue-300 mt-2">{user.location?.name ?? 'No Location'}</p>
       </div>
 
       {/* Navigation */}

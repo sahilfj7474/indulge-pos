@@ -77,6 +77,11 @@ export default function Receipt({
         <div className="p-4 max-h-[70vh] overflow-y-auto">
           <div ref={ref} className="receipt-print bg-white text-black p-4 font-mono text-xs">
             <div className="text-center mb-3">
+              <img
+                src="/logo-black.png"
+                alt="Indulge"
+                className="h-14 w-auto mx-auto mb-2 object-contain"
+              />
               <p className="text-base font-bold">{storeName}</p>
               {businessAddress && <p>{businessAddress}</p>}
               {businessPhone && <p>Tel: {businessPhone}</p>}

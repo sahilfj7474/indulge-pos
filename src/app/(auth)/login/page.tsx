@@ -29,8 +29,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-blue-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Indulge POS</h1>
-          <p className="text-slate-500 mt-1">Sign in to your account</p>
+          <img
+            src="/logo-white.png"
+            alt="Indulge POS"
+            className="h-20 w-auto mx-auto mb-4 object-contain drop-shadow-lg"
+          />
+          <p className="text-slate-400 mt-1 text-sm">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleLogin} className="bg-white rounded-xl p-6 space-y-4 border border-blue-100">
