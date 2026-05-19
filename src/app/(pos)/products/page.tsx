@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
-import { Product, Category } from '@/types'
+import { Product, Category, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
-import { getAllProducts, getCategories, deleteProduct, updateProduct } from '@/lib/services/admin.service'
-import { getInventoryStockMap } from '@/lib/services/inventory.service'
+import { getAllProducts, getCategories, getLocations, deleteProduct, updateProduct } from '@/lib/services/admin.service'
+import { getInventoryStockMap, getAllInventoryStockMap } from '@/lib/services/inventory.service'
 import { formatCurrency, formatDateTime, exportToCSV, cn } from '@/lib/utils'
 import ProductModal from '@/components/products/ProductModal'
 import CategoryModal from '@/components/products/CategoryModal'
 import BarcodeLabelModal from '@/components/products/BarcodeLabelModal'
-import { Plus, Pencil, Trash2, Search, Barcode, Download, ChevronLeft, ChevronRight, Package } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, Barcode, Download, ChevronLeft, ChevronRight, Package, MapPin, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const ITEMS_PER_PAGE = 20
@@ -19,7 +19,9 @@ export default function ProductsPage() {
   const { user } = useAuth()
   const [products,   setProducts]   = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [locations,  setLocations]  = useState<Location[]>([])
   const [stockMap,   setStockMap]   = useState<Map<string, number>>(new Map())
+  const [stockLocationId, setStockLocationId] = useState<string>('') // '' = all stores
   const [loading,    setLoading]    = useState(true)
   const [search,          setSearch]          = useState('')
   const [filterCategory,  setFilterCategory]  = useState<string | null>(null)
@@ -33,20 +35,42 @@ export default function ProductsPage() {
   const [labelProduct,      setLabelProduct]      = useState<Product | null>(null)
   const [tab, setTab] = useState<'products' | 'categories'>('products')
 
+  const isManager = user?.role === 'manager' || user?.role === 'admin'
+
+  async function loadStock(locId: string) {
+    const stock = locId
+      ? await getInventoryStockMap(locId)
+      : await getAllInventoryStockMap()
+    setStockMap(stock)
+  }
+
   async function load() {
-    const locationId = user?.location_id
-    const [prods, cats, stock] = await Promise.all([
+    setLoading(true)
+    // Determine initial stock location: non-managers use their assigned location, managers default to "all"
+    const initLocId = isManager ? '' : (user?.location_id ?? '')
+    const [prods, cats, locs, stock] = await Promise.all([
       getAllProducts(),
       getCategories(),
-      locationId ? getInventoryStockMap(locationId) : Promise.resolve(new Map<string, number>()),
+      isManager ? getLocations() : Promise.resolve([]),
+      initLocId ? getInventoryStockMap(initLocId) : getAllInventoryStockMap(),
     ])
     setProducts(prods)
     setCategories(cats)
+    setLocations(locs.filter((l: Location) => l.is_active !== false))
     setStockMap(stock)
+    // Set initial stockLocationId for non-managers
+    if (!isManager && initLocId) setStockLocationId(initLocId)
     setLoading(false)
   }
 
   useEffect(() => { if (user !== undefined) load() }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reload stock when the selected store changes
+  useEffect(() => {
+    if (user !== undefined && !loading) {
+      loadStock(stockLocationId)
+    }
+  }, [stockLocationId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     setPage(1)
@@ -182,6 +206,14 @@ export default function ProductsPage() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+            {/* Stock store selector — only visible to managers/admins with multiple locations */}
+            {isManager && locations.length > 0 && (
+              <StockLocationSelect
+                locations={locations}
+                value={stockLocationId}
+                onChange={setStockLocationId}
+              />
+            )}
           </div>
 
           {/* Table */}
@@ -195,7 +227,11 @@ export default function ProductsPage() {
                   <th className="text-left px-4 py-3 text-slate-500 font-medium">Category</th>
                   <th className="text-right px-4 py-3 text-slate-500 font-medium">Price</th>
                   <th className="text-right px-4 py-3 text-slate-500 font-medium">Cost</th>
-                  <th className="text-right px-4 py-3 text-slate-500 font-medium">Stock</th>
+                  <th className="text-right px-4 py-3 text-slate-500 font-medium">
+                    {stockLocationId
+                      ? `Stock (${locations.find(l => l.id === stockLocationId)?.name ?? 'Store'})`
+                      : 'Stock (All)'}
+                  </th>
                   <th className="text-left px-4 py-3 text-slate-500 font-medium">Created</th>
                   <th className="text-center px-4 py-3 text-slate-500 font-medium">Status</th>
                   <th className="px-4 py-3" />
@@ -395,5 +431,70 @@ export default function ProductsPage() {
         <BarcodeLabelModal product={labelProduct} onClose={() => setLabelProduct(null)} />
       )}
     </div>
+  )
+}
+
+// ── Stock location selector (small inline dropdown) ──────────────────────
+function StockLocationSelect({
+  locations, value, onChange,
+}: { locations: Location[]; value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pos,  setPos]  = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (btnRef.current?.contains(e.target as Node) || menuRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  function toggle() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setPos({ top: rect.bottom + 4, left: rect.left })
+    }
+    setOpen(o => !o)
+  }
+
+  const label = value ? (locations.find(l => l.id === value)?.name ?? 'Store') : 'All Stores'
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 text-xs font-semibold hover:border-blue-400 transition-colors focus:outline-none whitespace-nowrap"
+      >
+        <MapPin size={12} className="text-blue-500 shrink-0" />
+        <span className="uppercase tracking-wider">Stock: {label}</span>
+        <ChevronDown size={12} className={cn('text-slate-400 transition-transform', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div
+          ref={menuRef}
+          style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999 }}
+          className="bg-white border border-blue-100 rounded-xl shadow-2xl w-52 overflow-hidden py-1"
+        >
+          {[{ id: '', name: 'All Stores (combined)' }, ...locations].map(l => (
+            <button
+              key={l.id}
+              onClick={() => { onChange(l.id); setOpen(false) }}
+              className={cn(
+                'w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left hover:bg-blue-50 transition-colors',
+                value === l.id ? 'text-blue-600 font-semibold' : 'text-slate-700'
+              )}
+            >
+              {value === l.id && <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
+              {value !== l.id && <span className="w-1.5 h-1.5 shrink-0" />}
+              {l.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
   )
 }

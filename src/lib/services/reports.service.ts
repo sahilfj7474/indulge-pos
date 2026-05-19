@@ -17,11 +17,15 @@ export interface SaleRow {
 }
 
 export async function fetchSalesForReport(
-  locationId: string,   // '' = all stores
+  locationIds: string | string[],   // '' or [] = all stores; string[] or single string for filtering
   dateFrom: string,
   dateTo: string
 ): Promise<SaleRow[]> {
   const supabase = createClient()
+  const ids = Array.isArray(locationIds)
+    ? locationIds
+    : (locationIds ? [locationIds] : [])
+
   let query = supabase
     .from('sales')
     .select(`
@@ -35,7 +39,8 @@ export async function fetchSalesForReport(
     .lte('created_at', localDayEnd(dateTo))
     .order('created_at')
     .limit(2000)
-  if (locationId) query = query.eq('location_id', locationId)
+  if (ids.length === 1) query = query.eq('location_id', ids[0])
+  else if (ids.length > 1) query = query.in('location_id', ids)
   const { data } = await query
   return (data ?? []) as unknown as SaleRow[]
 }
@@ -182,8 +187,11 @@ export async function getDashboardStats(locationId: string, dateFrom: string, da
   }
 }
 
-export async function getRefundsTotal(locationId: string, dateFrom: string, dateTo: string): Promise<number> {
+export async function getRefundsTotal(locationIds: string | string[], dateFrom: string, dateTo: string): Promise<number> {
   const supabase = createClient()
+  const ids = Array.isArray(locationIds)
+    ? locationIds
+    : (locationIds ? [locationIds] : [])
   // Get sale IDs for this location and date range that have refunds
   let salesQuery = supabase
     .from('sales')
@@ -191,7 +199,8 @@ export async function getRefundsTotal(locationId: string, dateFrom: string, date
     .gte('created_at', localDayStart(dateFrom))
     .lte('created_at', localDayEnd(dateTo))
     .in('status', ['refunded', 'partial_refund'])
-  if (locationId) salesQuery = salesQuery.eq('location_id', locationId)
+  if (ids.length === 1) salesQuery = salesQuery.eq('location_id', ids[0])
+  else if (ids.length > 1) salesQuery = salesQuery.in('location_id', ids)
   const { data: sales } = await salesQuery
   if (!sales || sales.length === 0) return 0
   const saleIds = (sales as { id: string }[]).map(s => s.id)

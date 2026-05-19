@@ -11,7 +11,7 @@ import { getLocations } from '@/lib/services/admin.service'
 import { Location } from '@/types'
 import { formatCurrency, exportToCSV, cn, localToday } from '@/lib/utils'
 import DateRangePicker from '@/components/ui/DateRangePicker'
-import LocationPicker from '@/components/ui/LocationPicker'
+import MultiLocationPicker from '@/components/ui/MultiLocationPicker'
 import ZReportModal from '@/components/reports/ZReportModal'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
@@ -56,15 +56,17 @@ export default function ReportsPage() {
   const [loading,   setLoading]   = useState(false)
   const [zType,     setZType]     = useState<'X' | 'Z' | null>(null)
   const [refundsTotal,       setRefundsTotal]       = useState(0)
-  const [locations,          setLocations]          = useState<Location[]>([])
-  const [selectedLocationId, setSelectedLocationId] = useState('')
-  const [exportOpen,         setExportOpen]         = useState(false)
+  const [locations,           setLocations]           = useState<Location[]>([])
+  const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([])
+  const [exportOpen,          setExportOpen]          = useState(false)
   const [exportPos,          setExportPos]          = useState({ top: 0, right: 0 })
   const exportBtnRef  = useRef<HTMLButtonElement>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
 
-  // '' = All Stores (manager+); non-manager locked to their location
-  const effectiveLocationId = isManager ? selectedLocationId : (user?.location_id ?? '')
+  // [] = All Stores (manager+); non-manager locked to their location
+  const effectiveLocationIds: string[] = isManager
+    ? selectedLocationIds
+    : (user?.location_id ? [user.location_id] : [])
 
   useEffect(() => {
     if (!isManager) return
@@ -95,16 +97,17 @@ export default function ReportsPage() {
   }
 
   const load = useCallback(async () => {
-    if (!effectiveLocationId) return
+    if (!isManager && effectiveLocationIds.length === 0) return
     setLoading(true)
     const [data, refunds] = await Promise.all([
-      fetchSalesForReport(effectiveLocationId, dateFrom, dateTo),
-      getRefundsTotal(effectiveLocationId, dateFrom, dateTo),
+      fetchSalesForReport(effectiveLocationIds, dateFrom, dateTo),
+      getRefundsTotal(effectiveLocationIds, dateFrom, dateTo),
     ])
     setSales(data)
     setRefundsTotal(refunds)
     setLoading(false)
-  }, [effectiveLocationId, dateFrom, dateTo])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(effectiveLocationIds), dateFrom, dateTo, isManager])
 
   useEffect(() => { load() }, [load])
 
@@ -126,8 +129,14 @@ export default function ReportsPage() {
   const marginPct       = totalExTax > 0 ? (grossProfit / totalExTax) * 100 : 0
   const netSales        = totalRevenue - refundsTotal
 
+  const zLocationLabel = effectiveLocationIds.length === 0
+    ? 'All Stores'
+    : effectiveLocationIds.length === 1
+    ? (locations.find(l => l.id === effectiveLocationIds[0])?.name ?? user?.location?.name ?? 'Store')
+    : `${effectiveLocationIds.length} Stores`
+
   const zData = user
-    ? buildZReportData(sales, user.location?.name ?? 'Store', dateFrom === dateTo ? dateFrom : `${dateFrom} to ${dateTo}`, user.full_name)
+    ? buildZReportData(sales, zLocationLabel, dateFrom === dateTo ? dateFrom : `${dateFrom} to ${dateTo}`, user.full_name)
     : null
 
   const MetricCard = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
@@ -148,10 +157,10 @@ export default function ReportsPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {isManager && locations.length > 0 && (
-            <LocationPicker
+            <MultiLocationPicker
               locations={locations}
-              selectedId={selectedLocationId}
-              onChange={setSelectedLocationId}
+              selectedIds={selectedLocationIds}
+              onChange={setSelectedLocationIds}
             />
           )}
           <DateRangePicker

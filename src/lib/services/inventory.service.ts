@@ -164,6 +164,19 @@ export async function getInventoryStockMap(locationId: string): Promise<Map<stri
   return map
 }
 
+// Sum stock across ALL locations (for admin/manager "All Stores" view)
+export async function getAllInventoryStockMap(): Promise<Map<string, number>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('inventory')
+    .select('product_id, quantity')
+  const map = new Map<string, number>()
+  for (const row of (data ?? []) as { product_id: string; quantity: number }[]) {
+    map.set(row.product_id, (map.get(row.product_id) ?? 0) + row.quantity)
+  }
+  return map
+}
+
 export async function getAdjustmentHistory(
   locationId: string,
   limit = 50

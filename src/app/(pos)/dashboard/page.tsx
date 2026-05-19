@@ -91,9 +91,10 @@ export default function DashboardPage() {
     // Non-managers must have a location; managers can load with '' = all stores
     if (!isManager && !effectiveLocationId) return
     setLoading(true)
+    const locationIdArr = effectiveLocationId ? [effectiveLocationId] : []
     const [statsData, salesData] = await Promise.all([
       getDashboardStats(effectiveLocationId, dateFrom, dateTo),
-      fetchSalesForReport(effectiveLocationId, dateFrom, dateTo),
+      fetchSalesForReport(locationIdArr, dateFrom, dateTo),
     ])
     setStats(statsData)
     setSales(salesData)
