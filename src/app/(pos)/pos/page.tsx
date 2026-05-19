@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { CartItem, Category, Customer, Product, Sale } from '@/types'
 import { useAuth } from '@/lib/auth/context'
+import { useActiveLocation } from '@/lib/context/active-location'
 import { getCategories, getActiveProducts, getProductByBarcode, searchProducts } from '@/lib/services/products.service'
 import { completeSale, SplitPayment } from '@/lib/services/pos.service'
 import { getHeldOrders, saveHeldOrder, HeldOrderRecord } from '@/lib/services/held-orders.service'
@@ -23,6 +24,7 @@ import toast from 'react-hot-toast'
 
 export default function POSPage() {
   const { user } = useAuth()
+  const { locationId, location: activeLocation } = useActiveLocation()
 
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -61,10 +63,10 @@ export default function POSPage() {
   } | null>(null)
 
   useEffect(() => {
-    if (!user?.location_id) return
+    if (!locationId) return
     Promise.all([
       getCategories(),
-      getActiveProducts(user.location_id),
+      getActiveProducts(locationId),
       getSettings(),
       getActivePromotions(),
       getPaymentMethods(),
@@ -80,24 +82,24 @@ export default function POSPage() {
       setLoadingProducts(false)
     })
     loadHeldOrders()
-  }, [user?.location_id])
+  }, [locationId])
 
   async function loadHeldOrders() {
-    if (!user?.location_id) return
-    const orders = await getHeldOrders(user.location_id)
+    if (!locationId) return
+    const orders = await getHeldOrders(locationId)
     setHeldOrders(orders)
   }
 
   // Search debounce
   useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) { setSearchResults([]); return }
-    if (!user?.location_id) return
+    if (!locationId) return
     const timer = setTimeout(async () => {
-      const results = await searchProducts(searchQuery, user.location_id!)
+      const results = await searchProducts(searchQuery, locationId)
       setSearchResults(results)
     }, 200)
     return () => clearTimeout(timer)
-  }, [searchQuery, user?.location_id])
+  }, [searchQuery, locationId])
 
   const displayProducts = useMemo(() => {
     const base = searchQuery.length >= 2 ? searchResults : products
@@ -180,7 +182,7 @@ export default function POSPage() {
     const label = prompt('Label for this held order:', 'Table 1') ?? ''
     if (!label.trim()) return
     try {
-      await saveHeldOrder(user!.location_id!, user!.id, label.trim(), {
+      await saveHeldOrder(locationId, user!.id, label.trim(), {
         items: cartItems,
         customer,
         discountType,
@@ -235,7 +237,7 @@ export default function POSPage() {
     try {
       const finalTotal = total + surchargeAmt
       const sale = await completeSale({
-        locationId: user.location_id!,
+        locationId,
         userId: user.id,
         customerId: customer?.id ?? null,
         items: cartItemsWithPromo,
@@ -262,13 +264,11 @@ export default function POSPage() {
     clearCart()
   }
 
-  if (!user?.location_id) {
+  // locationId is resolved by PosLayout (location picker shown if needed)
+  if (!locationId) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <p className="text-slate-500">No location assigned to your account.</p>
-          <p className="text-slate-400 text-sm mt-1">Contact an admin to assign you to a location.</p>
-        </div>
+        <p className="text-slate-400 text-sm">Waiting for location selection...</p>
       </div>
     )
   }
@@ -366,12 +366,12 @@ export default function POSPage() {
         />
       )}
 
-      {completedSale && user.location && (
+      {completedSale && user && activeLocation && (
         <Receipt
           sale={completedSale.sale}
           items={cartItemsWithPromo}
           customer={customer}
-          location={user.location}
+          location={activeLocation}
           cashier={user}
           amountTendered={completedSale.amountTendered}
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}

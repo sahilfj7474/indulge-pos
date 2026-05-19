@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
+import { useActiveLocation } from '@/lib/context/active-location'
 import {
   getOpenRegister, openRegister, closeRegister, addCashMovement,
   getRegisterHistory, getRegisterSalesSummary,
@@ -29,6 +30,7 @@ interface SalesSummary {
 
 export default function RegisterPage() {
   const { user } = useAuth()
+  const { locationId } = useActiveLocation()
   const [openReg,  setOpenReg]  = useState<Register | null>(null)
   const [history,  setHistory]  = useState<Register[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -48,17 +50,17 @@ export default function RegisterPage() {
   const [movementAmount, setMovementAmount] = useState('')
 
   async function load() {
-    if (!user?.location_id) return
+    if (!locationId || !user) return
     setLoading(true)
     const [reg, hist] = await Promise.all([
-      getOpenRegister(user.location_id, user.id),
-      getRegisterHistory(user.location_id),
+      getOpenRegister(locationId, user.id),
+      getRegisterHistory(locationId),
     ])
     setOpenReg(reg)
     setHistory(hist)
 
     if (reg) {
-      const s = await getRegisterSalesSummary(user.location_id, reg.opened_at)
+      const s = await getRegisterSalesSummary(locationId, reg.opened_at)
       setSummary(s)
       // Pre-fill Counted with Expected values so the cashier just adjusts if needed
       const init: Record<string, string> = {}
@@ -74,14 +76,14 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [locationId, user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleOpen() {
-    if (!user?.location_id) return
+    if (!locationId || !user) return
     const f = parseFloat(openingFloat)
     if (isNaN(f) || f < 0) { toast.error('Enter a valid opening float'); return }
     try {
-      await openRegister(user.location_id, user.id, f)
+      await openRegister(locationId, user.id, f)
       setOpeningFloat('')
       toast.success('Register opened')
       load()
