@@ -19,7 +19,7 @@ export default function ProductGrid({ products, onAdd }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-3 xl:grid-cols-4 gap-2.5">
+    <div className="grid grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
       {products.map(product => (
         <button
           key={product.id}
@@ -27,7 +27,7 @@ export default function ProductGrid({ products, onAdd }: Props) {
           className="bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 hover:border-blue-500 rounded-xl overflow-hidden text-left transition-all group flex flex-col active:scale-[0.97]"
         >
           {/* Image */}
-          <div className="w-full h-32 bg-white flex items-center justify-center overflow-hidden relative">
+          <div className="w-full h-24 bg-white flex items-center justify-center overflow-hidden relative">
             {product.image_url ? (
               <img
                 src={product.image_url}
