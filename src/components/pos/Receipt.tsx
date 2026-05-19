@@ -79,7 +79,14 @@ export default function Receipt({
   const receiptHeader  = settings.receipt_header   || ''
   const receiptFooter  = settings.receipt_footer   || 'Thank you for your purchase!'
   const taxPct         = +(taxRate * 100).toFixed(4)
-  const taxLabel       = `${taxPct}% VAT${taxInclusive ? ' (INCL.)' : ''}`
+  const taxLabel       = `${taxPct}% VAT`
+
+  // Convert to ex-tax amounts for display so receipt reads: Subtotal + VAT = Total
+  const displayFactor      = taxInclusive ? 1 / (1 + taxRate) : 1
+  // sale.discount_amount = cart discount + loyalty combined; split them out
+  const cartDiscountAmount = Math.max(0, sale.discount_amount - loyaltyPointsRedeemed)
+  const displaySubtotal    = sale.subtotal * displayFactor
+  const displayDiscount    = cartDiscountAmount * displayFactor
 
   const dateStr    = formatDateTime(sale.created_at)
   const receiptNum = sale.id.slice(0, 8).toUpperCase()
@@ -168,9 +175,9 @@ export default function Receipt({
             {/* ── Totals ── */}
             <p>{DIV}</p>
             <div className="space-y-0.5 my-1">
-              <Row label="Subtotal"  value={formatCurrency(sale.subtotal)} />
-              {sale.discount_amount > 0 && (
-                <Row label="Discount" value={`-${formatCurrency(sale.discount_amount)}`} />
+              <Row label="Subtotal" value={formatCurrency(displaySubtotal)} />
+              {displayDiscount > 0 && (
+                <Row label="Discount" value={`-${formatCurrency(displayDiscount)}`} />
               )}
               {loyaltyPointsRedeemed > 0 && (
                 <Row label="Points Redeemed" value={`-${formatCurrency(loyaltyPointsRedeemed)}`} />

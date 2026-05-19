@@ -89,7 +89,13 @@ export default function Cart({
   )
   const maxRedeem = customer ? Math.min(customer.loyalty_points, Math.floor(subtotal - discountAmount)) : 0
   const taxPct = +(taxRate * 100).toFixed(4)
-  const taxLabel = `${taxPct}% VAT${taxInclusive ? ' (incl.)' : ''}`
+  const taxLabel = `${taxPct}% VAT`
+
+  // For display: convert to ex-tax amounts when prices are tax-inclusive
+  // so the receipt reads: Subtotal (ex-VAT) + VAT = Total
+  const displayFactor  = taxInclusive ? 1 / (1 + taxRate) : 1
+  const displaySubtotal = subtotal * displayFactor
+  const displayDiscount = discountAmount * displayFactor
 
   function toggleNote(i: number) {
     setExpandedNotes(prev => {
@@ -264,11 +270,11 @@ export default function Cart({
       {/* Totals */}
       <div className="px-3 py-3 border-t border-blue-100 space-y-1.5">
         <div className="flex justify-between text-sm text-slate-500">
-          <span>Subtotal</span><span>{formatCurrency(subtotal)}</span>
+          <span>Subtotal</span><span>{formatCurrency(displaySubtotal)}</span>
         </div>
-        {discountAmount > 0 && (
+        {displayDiscount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
-            <span>Discount</span><span>-{formatCurrency(discountAmount)}</span>
+            <span>Discount</span><span>-{formatCurrency(displayDiscount)}</span>
           </div>
         )}
         {loyaltyDiscount > 0 && (
