@@ -1,12 +1,12 @@
 ﻿'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { CartItem, Category, Customer, PaymentMethod, Product, Sale } from '@/types'
+import { CartItem, Category, Customer, Product, Sale } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getCategories, getActiveProducts, getProductByBarcode, searchProducts } from '@/lib/services/products.service'
 import { completeSale, SplitPayment } from '@/lib/services/pos.service'
 import { getHeldOrders, saveHeldOrder, HeldOrderRecord } from '@/lib/services/held-orders.service'
-import { getSettings } from '@/lib/services/settings.service'
+import { getSettings, getPaymentMethods, PaymentMethodConfig } from '@/lib/services/settings.service'
 import { getActivePromotions, applyPromotions, Promotion } from '@/lib/services/promotions.service'
 import { getVariants, ProductVariant } from '@/lib/services/variants.service'
 import { calculateLoyaltyPoints } from '@/lib/utils'
@@ -35,8 +35,8 @@ export default function POSPage() {
   // Settings
   const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE)
   const [taxInclusive, setTaxInclusive] = useState(false)
-  const [cardSurchargeRate, setCardSurchargeRate] = useState(0)
   const [settings, setSettings] = useState<Record<string, string>>({})
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodConfig[]>([])
 
   // Promotions
   const [promotions, setPromotions] = useState<Promotion[]>([])
@@ -67,16 +67,16 @@ export default function POSPage() {
       getActiveProducts(user.location_id),
       getSettings(),
       getActivePromotions(),
-    ]).then(([cats, prods, s, promos]) => {
+      getPaymentMethods(),
+    ]).then(([cats, prods, s, promos, methods]) => {
       setCategories(cats)
       setProducts(prods)
       setSettings(s)
       const rate = parseFloat(s.tax_rate ?? '9') / 100
       setTaxRate(isNaN(rate) ? DEFAULT_TAX_RATE : rate)
       setTaxInclusive(s.tax_inclusive === 'true')
-      const surchargeRate = parseFloat(s.card_surcharge_pct ?? '0')
-      setCardSurchargeRate(isNaN(surchargeRate) ? 0 : surchargeRate)
       setPromotions(promos)
+      setPaymentMethods(methods)
       setLoadingProducts(false)
     })
     loadHeldOrders()
@@ -225,7 +225,7 @@ export default function POSPage() {
     cartItemsWithPromo, discountType, discountValue, loyaltyPointsToRedeem, 0, taxRate, taxInclusive
   )
 
-  async function handleCompleteSale(method: PaymentMethod, amountTendered: number, splits?: SplitPayment[], surchargeAmt = 0) {
+  async function handleCompleteSale(method: string, amountTendered: number, splits?: SplitPayment[], surchargeAmt = 0) {
     if (!user) return
     if (method === 'account' && !customer) {
       toast.error('Select a customer to charge to account')
@@ -339,7 +339,7 @@ export default function POSPage() {
           total={total}
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}
           hasCustomer={!!customer}
-          cardSurchargeRate={cardSurchargeRate}
+          paymentMethods={paymentMethods}
           onConfirm={handleCompleteSale}
           onClose={() => setShowPayment(false)}
         />

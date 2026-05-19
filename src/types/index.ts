@@ -104,7 +104,8 @@ export interface SaleItem {
   total: number
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'loyalty_points' | 'split' | 'account'
+// Dynamic — any string ID is valid (e.g. 'cash', 'card', 'mpaisa', 'split', 'account')
+export type PaymentMethod = string
 export type SaleStatus = 'completed' | 'refunded' | 'partial_refund' | 'voided'
 
 export interface Refund {

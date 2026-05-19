@@ -1,58 +1,72 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
-import { PaymentMethod } from '@/types'
 import { SplitPayment } from '@/lib/services/pos.service'
+import { PaymentMethodConfig, DEFAULT_PAYMENT_METHODS } from '@/lib/services/settings.service'
 import { formatCurrency, cn } from '@/lib/utils'
-import { X, Banknote, CreditCard, Building2, Star, Split, BookUser } from 'lucide-react'
+import {
+  X, Banknote, CreditCard, Building2, Star, Split, BookUser, Smartphone,
+} from 'lucide-react'
 
 interface Props {
   total: number
   loyaltyPointsRedeemed: number
   hasCustomer?: boolean
-  cardSurchargeRate?: number   // e.g. 4.5 means 4.5%
-  onConfirm: (method: PaymentMethod, amountTendered: number, splits?: SplitPayment[], surchargeAmt?: number) => void
+  paymentMethods?: PaymentMethodConfig[]
+  onConfirm: (method: string, amountTendered: number, splits?: SplitPayment[], surchargeAmt?: number) => void
   onClose: () => void
 }
 
-type SingleMethod = Exclude<PaymentMethod, 'split'>
+function getIcon(id: string) {
+  if (id === 'cash')                                              return Banknote
+  if (id === 'card' || id === 'eftpos')                          return CreditCard
+  if (id === 'bank_transfer' || id === 'bank')                   return Building2
+  if (id === 'loyalty_points' || id === 'loyalty')               return Star
+  if (id === 'account')                                          return BookUser
+  if (['mpaisa', 'mobile', 'phone', 'mpay'].some(k => id.includes(k))) return Smartphone
+  return CreditCard
+}
 
-const ALL_METHODS: { value: SingleMethod; label: string; icon: React.ElementType; requiresCustomer?: boolean }[] = [
-  { value: 'cash',           label: 'Cash',           icon: Banknote   },
-  { value: 'card',           label: 'Card / EFTPOS',  icon: CreditCard },
-  { value: 'bank_transfer',  label: 'Bank Transfer',  icon: Building2  },
-  { value: 'loyalty_points', label: 'Loyalty Points', icon: Star       },
-  { value: 'account',        label: 'Charge to Acct', icon: BookUser, requiresCustomer: true },
-]
+export default function PaymentModal({
+  total,
+  loyaltyPointsRedeemed,
+  hasCustomer = false,
+  paymentMethods = DEFAULT_PAYMENT_METHODS,
+  onConfirm,
+  onClose,
+}: Props) {
+  const enabledMethods = paymentMethods.filter(m => m.enabled)
 
-export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer = false, cardSurchargeRate = 0, onConfirm, onClose }: Props) {
   const [isSplit, setIsSplit] = useState(false)
-
-  // Single payment
-  const [method, setMethod] = useState<SingleMethod>('cash')
+  const [method, setMethod] = useState<string>(enabledMethods[0]?.id ?? 'cash')
   const [tendered, setTendered] = useState('')
 
-  // Split payment
-  const [split1Method, setSplit1Method] = useState<SingleMethod>('cash')
+  // Split
+  const splitCandidates = enabledMethods.filter(m => !m.requires_customer)
+  const [split1Method, setSplit1Method] = useState<string>(splitCandidates[0]?.id ?? 'cash')
+  const [split2Method, setSplit2Method] = useState<string>(splitCandidates[1]?.id ?? 'card')
   const [split1Amount, setSplit1Amount] = useState('')
-  const [split2Method, setSplit2Method] = useState<SingleMethod>('card')
 
   const split1 = parseFloat(split1Amount || '0')
   const split2 = Math.max(0, total - split1)
   const splitValid = split1 > 0 && split1 < total && split1Method !== split2Method
 
-  // Card surcharge — only on single card/EFTPOS payment
-  const surchargeAmt = !isSplit && method === 'card' && cardSurchargeRate > 0
-    ? +(total * cardSurchargeRate / 100).toFixed(2)
+  // Per-method surcharge (single payment only)
+  const selectedMethod = enabledMethods.find(m => m.id === method)
+  const surchargeAmt = !isSplit && (selectedMethod?.surcharge_pct ?? 0) > 0
+    ? +(total * (selectedMethod!.surcharge_pct / 100)).toFixed(2)
     : 0
   const finalTotal = total + surchargeAmt
 
-  const change = !isSplit && method === 'cash' ? Math.max(0, parseFloat(tendered || '0') - total) : 0
+  const change = !isSplit && method === 'cash'
+    ? Math.max(0, parseFloat(tendered || '0') - finalTotal)
+    : 0
+
   const singleCanComplete = isSplit
     ? splitValid
-    : method === 'account'
+    : selectedMethod?.requires_customer
       ? hasCustomer
-      : method !== 'cash' || parseFloat(tendered || '0') >= total
+      : method !== 'cash' || parseFloat(tendered || '0') >= finalTotal
 
   function handleConfirm() {
     if (isSplit) {
@@ -66,11 +80,10 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
     }
   }
 
-  const splitMethods = ALL_METHODS.filter(m => m.value !== 'account')
-
   return (
     <div className="fixed inset-0 bg-blue-950/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white border border-blue-200 rounded-xl w-full max-w-sm shadow-2xl">
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-blue-100">
           <h2 className="text-lg font-semibold text-slate-900">Payment</h2>
           <button
@@ -82,13 +95,13 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Total */}
+          {/* Amount due */}
           <div className="text-center">
             <p className="text-sm text-slate-500">Amount Due</p>
             <p className="text-3xl font-bold text-blue-500">{formatCurrency(finalTotal)}</p>
             {surchargeAmt > 0 && (
               <p className="text-xs text-amber-600 mt-0.5 font-medium">
-                Incl. {cardSurchargeRate}% card surcharge (+{formatCurrency(surchargeAmt)})
+                Incl. {selectedMethod!.surcharge_pct}% surcharge (+{formatCurrency(surchargeAmt)})
               </p>
             )}
             {loyaltyPointsRedeemed > 0 && (
@@ -96,7 +109,7 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
             )}
           </div>
 
-          {/* Split toggle */}
+          {/* Single / Split toggle */}
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => setIsSplit(false)}
@@ -116,34 +129,38 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
 
           {!isSplit ? (
             <>
-              {/* Single method grid */}
+              {/* Method grid */}
               <div className="grid grid-cols-2 gap-2">
-                {ALL_METHODS.map(m => {
-                  const Icon = m.icon
-                  const disabled = m.requiresCustomer && !hasCustomer
+                {enabledMethods.map(m => {
+                  const Icon = getIcon(m.id)
+                  const disabled = !!m.requires_customer && !hasCustomer
                   return (
                     <button
-                      key={m.value}
-                      onClick={() => !disabled && setMethod(m.value)}
+                      key={m.id}
+                      onClick={() => !disabled && setMethod(m.id)}
                       disabled={disabled}
                       title={disabled ? 'Select a customer first' : undefined}
                       className={cn(
                         'flex items-center gap-2.5 px-3 py-3.5 rounded-xl border text-sm font-semibold transition-colors active:scale-[0.97]',
-                        method === m.value
+                        method === m.id
                           ? 'bg-blue-600 border-blue-500 text-white'
                           : disabled
                             ? 'bg-blue-50/40 border-blue-100 text-slate-400 cursor-not-allowed'
                             : 'bg-blue-50 border-blue-200 text-slate-500 hover:text-slate-800 hover:border-blue-300'
                       )}
                     >
-                      <Icon size={17} />{m.label}
+                      <Icon size={17} />
+                      <span className="truncate">{m.label}</span>
+                      {m.surcharge_pct > 0 && method !== m.id && (
+                        <span className="ml-auto text-xs text-amber-500 font-normal shrink-0">+{m.surcharge_pct}%</span>
+                      )}
                     </button>
                   )
                 })}
               </div>
 
-              {method === 'account' && !hasCustomer && (
-                <p className="text-xs text-amber-600">Add a customer to the cart to charge to account.</p>
+              {selectedMethod?.requires_customer && !hasCustomer && (
+                <p className="text-xs text-amber-600">Add a customer to the cart to use this payment method.</p>
               )}
 
               {/* Cash tendered */}
@@ -161,29 +178,30 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                   {parseFloat(tendered || '0') >= finalTotal && (
                     <div className="flex justify-between mt-2 text-sm">
                       <span className="text-slate-500">Change</span>
-                      <span className="text-green-600 font-semibold">{formatCurrency(Math.max(0, parseFloat(tendered || '0') - finalTotal))}</span>
+                      <span className="text-green-600 font-semibold">{formatCurrency(change)}</span>
                     </div>
                   )}
                 </div>
               )}
 
-              {method === 'account' && hasCustomer && (
+              {selectedMethod?.requires_customer && hasCustomer && (
                 <div className="p-3 bg-blue-900/20 border border-blue-800/40 rounded-lg text-xs text-blue-300">
-                  {formatCurrency(total)} will be added to the customer's outstanding account balance.
+                  {formatCurrency(total)} will be added to the customer&apos;s outstanding account balance.
                 </div>
               )}
             </>
           ) : (
+            /* Split payment */
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-slate-500 mb-1">Payment 1</label>
                 <div className="flex gap-2">
                   <select
                     value={split1Method}
-                    onChange={e => setSplit1Method(e.target.value as SingleMethod)}
+                    onChange={e => setSplit1Method(e.target.value)}
                     className="flex-1 px-2 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    {splitMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    {splitCandidates.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                   </select>
                   <input
                     type="number"
@@ -199,10 +217,10 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                 <div className="flex gap-2">
                   <select
                     value={split2Method}
-                    onChange={e => setSplit2Method(e.target.value as SingleMethod)}
+                    onChange={e => setSplit2Method(e.target.value)}
                     className="flex-1 px-2 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    {splitMethods.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    {splitCandidates.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                   </select>
                   <div className="w-24 px-2 py-2 bg-blue-100 border border-blue-300 rounded-lg text-sm text-slate-900 text-right">
                     {formatCurrency(split2)}
