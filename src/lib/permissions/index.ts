@@ -43,6 +43,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Products',        href: '/products',        icon: 'Package',         minRole: 'manager',    group: 'Catalog' },
   // Reports & Admin
   { label: 'Reports',         href: '/reports',         icon: 'BarChart2',       minRole: 'supervisor', group: 'Reports' },
+  { label: 'Customer Groups',  href: '/admin/customer-groups', icon: 'Layers',   minRole: 'manager',    group: 'Admin' },
   { label: 'Locations',       href: '/admin/locations', icon: 'MapPin',          minRole: 'admin',      group: 'Admin' },
   { label: 'Users',           href: '/admin/users',     icon: 'UserCog',         minRole: 'admin',      group: 'Admin' },
   { label: 'Settings',        href: '/admin/settings',  icon: 'Settings',        minRole: 'admin',      group: 'Admin' },

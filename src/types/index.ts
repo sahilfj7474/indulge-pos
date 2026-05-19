@@ -64,14 +64,44 @@ export interface InventoryAdjustment {
   created_at: string
 }
 
+export interface CustomerGroup {
+  id: string
+  name: string
+  discount_type: 'none' | 'flat_rate' | 'markup'
+  discount_value: number
+  is_default: boolean
+  created_at: string
+}
+
 export interface Customer {
   id: string
   full_name: string
+  first_name: string | null
+  last_name: string | null
   email: string | null
   phone: string | null
   loyalty_points: number
   total_spent: number
   created_at: string
+  // Extended fields
+  gender: string | null
+  date_of_birth: string | null
+  company: string | null
+  customer_tax_id: string | null
+  customer_group_id: string | null
+  customer_group?: CustomerGroup
+  address_line1: string | null
+  address_line2: string | null
+  city: string | null
+  state_province: string | null
+  country: string | null
+  postal_code: string | null
+  secondary_email: string | null
+  customer_code: string | null
+  notes: string | null
+  tax_exempt: boolean
+  marketing_opt_in: boolean
+  account_limit: number
 }
 
 export interface Sale {

@@ -7,14 +7,14 @@ import { getNavItems } from '@/lib/permissions'
 import {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings, LogOut,
-  DollarSign, LayoutDashboard,
+  DollarSign, LayoutDashboard, Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const ICONS: Record<string, React.ElementType> = {
   ShoppingCart, Receipt, Users, Package, Warehouse,
   BarChart2, MapPin, UserCog, Settings,
-  DollarSign, LayoutDashboard,
+  DollarSign, LayoutDashboard, Layers,
 }
 
 export default function Sidebar() {
