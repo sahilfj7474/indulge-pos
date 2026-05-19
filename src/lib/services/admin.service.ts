@@ -105,7 +105,7 @@ export async function getLocations(): Promise<Location[]> {
   return (data ?? []) as Location[]
 }
 
-export async function createLocation(data: { name: string; address: string | null; phone: string | null }): Promise<Location> {
+export async function createLocation(data: { name: string; address: string | null; email?: string | null; phone: string | null; opening_hours?: import('@/types').OpeningHours[] | null }): Promise<Location> {
   const supabase = createClient()
   const { data: created, error } = await supabase.from('locations').insert(data).select().single()
   if (error) throw new Error(error.message)

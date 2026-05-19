@@ -1,10 +1,19 @@
 export type UserRole = 'cashier' | 'supervisor' | 'manager' | 'admin'
 
+export interface OpeningHours {
+  day: number       // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+  open: boolean
+  from: string      // "09:00"
+  to: string        // "21:00"
+}
+
 export interface Location {
   id: string
   name: string
   address: string | null
+  email: string | null
   phone: string | null
+  opening_hours: OpeningHours[] | null
   is_active: boolean
   created_at: string
 }
