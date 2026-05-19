@@ -286,9 +286,9 @@ export default function POSPage() {
           {heldOrders.length > 0 && (
             <button
               onClick={() => setShowHeldOrders(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-600 text-xs font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-3 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border border-amber-300 text-amber-600 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
             >
-              <PauseCircle size={14} />
+              <PauseCircle size={16} />
               {heldOrders.length} Held
             </button>
           )}
@@ -308,7 +308,7 @@ export default function POSPage() {
       </div>
 
       {/* Right: Cart */}
-      <div className="w-80 shrink-0 flex flex-col">
+      <div className="w-96 shrink-0 flex flex-col">
         <Cart
           items={cartItemsWithPromo}
           customer={customer}
