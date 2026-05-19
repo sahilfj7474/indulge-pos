@@ -20,10 +20,11 @@ const SETTING_GROUPS = [
   {
     title: 'Tax & Pricing',
     fields: [
-      { key: 'tax_rate',       label: 'VAT / Tax Rate (%)',         type: 'number', placeholder: '9' },
-      { key: 'tax_inclusive',  label: 'Prices are tax-inclusive',   type: 'checkbox', placeholder: '' },
-      { key: 'vat_number',     label: 'VAT Registration Number',    type: 'text',   placeholder: 'FJ-VAT-...' },
-      { key: 'currency',       label: 'Currency Code',              type: 'text',   placeholder: 'FJD' },
+      { key: 'tax_rate',            label: 'VAT / Tax Rate (%)',              type: 'number',   placeholder: '9' },
+      { key: 'tax_inclusive',       label: 'Prices are tax-inclusive',        type: 'checkbox', placeholder: '' },
+      { key: 'vat_number',          label: 'VAT Registration Number',         type: 'text',     placeholder: 'FJ-VAT-...' },
+      { key: 'currency',            label: 'Currency Code',                   type: 'text',     placeholder: 'FJD' },
+      { key: 'card_surcharge_pct',  label: 'Card / EFTPOS Surcharge (%)',     type: 'number',   placeholder: '0' },
     ],
   },
   {

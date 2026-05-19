@@ -10,7 +10,8 @@ interface Props {
   total: number
   loyaltyPointsRedeemed: number
   hasCustomer?: boolean
-  onConfirm: (method: PaymentMethod, amountTendered: number, splits?: SplitPayment[]) => void
+  cardSurchargeRate?: number   // e.g. 4.5 means 4.5%
+  onConfirm: (method: PaymentMethod, amountTendered: number, splits?: SplitPayment[], surchargeAmt?: number) => void
   onClose: () => void
 }
 
@@ -24,7 +25,7 @@ const ALL_METHODS: { value: SingleMethod; label: string; icon: React.ElementType
   { value: 'account',        label: 'Charge to Acct', icon: BookUser, requiresCustomer: true },
 ]
 
-export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer = false, onConfirm, onClose }: Props) {
+export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer = false, cardSurchargeRate = 0, onConfirm, onClose }: Props) {
   const [isSplit, setIsSplit] = useState(false)
 
   // Single payment
@@ -40,6 +41,12 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
   const split2 = Math.max(0, total - split1)
   const splitValid = split1 > 0 && split1 < total && split1Method !== split2Method
 
+  // Card surcharge — only on single card/EFTPOS payment
+  const surchargeAmt = !isSplit && method === 'card' && cardSurchargeRate > 0
+    ? +(total * cardSurchargeRate / 100).toFixed(2)
+    : 0
+  const finalTotal = total + surchargeAmt
+
   const change = !isSplit && method === 'cash' ? Math.max(0, parseFloat(tendered || '0') - total) : 0
   const singleCanComplete = isSplit
     ? splitValid
@@ -53,9 +60,9 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
         { method: split1Method, amount: split1 },
         { method: split2Method, amount: split2 },
       ]
-      onConfirm('split', total, splits)
+      onConfirm('split', total, splits, 0)
     } else {
-      onConfirm(method, parseFloat(tendered || String(total)))
+      onConfirm(method, parseFloat(tendered || String(finalTotal)), undefined, surchargeAmt)
     }
   }
 
@@ -78,7 +85,12 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
           {/* Total */}
           <div className="text-center">
             <p className="text-sm text-slate-500">Amount Due</p>
-            <p className="text-3xl font-bold text-blue-500">{formatCurrency(total)}</p>
+            <p className="text-3xl font-bold text-blue-500">{formatCurrency(finalTotal)}</p>
+            {surchargeAmt > 0 && (
+              <p className="text-xs text-amber-600 mt-0.5 font-medium">
+                Incl. {cardSurchargeRate}% card surcharge (+{formatCurrency(surchargeAmt)})
+              </p>
+            )}
             {loyaltyPointsRedeemed > 0 && (
               <p className="text-xs text-blue-400 mt-0.5">Includes {loyaltyPointsRedeemed} pts redeemed</p>
             )}
@@ -144,12 +156,12 @@ export default function PaymentModal({ total, loyaltyPointsRedeemed, hasCustomer
                     value={tendered}
                     onChange={e => setTendered(e.target.value)}
                     className="w-full px-3 py-3 bg-blue-50 border border-blue-200 rounded-lg text-slate-900 text-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0.00"
+                    placeholder={finalTotal.toFixed(2)}
                   />
-                  {parseFloat(tendered || '0') >= total && (
+                  {parseFloat(tendered || '0') >= finalTotal && (
                     <div className="flex justify-between mt-2 text-sm">
                       <span className="text-slate-500">Change</span>
-                      <span className="text-green-600 font-semibold">{formatCurrency(change)}</span>
+                      <span className="text-green-600 font-semibold">{formatCurrency(Math.max(0, parseFloat(tendered || '0') - finalTotal))}</span>
                     </div>
                   )}
                 </div>

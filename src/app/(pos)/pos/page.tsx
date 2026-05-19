@@ -35,6 +35,7 @@ export default function POSPage() {
   // Settings
   const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE)
   const [taxInclusive, setTaxInclusive] = useState(false)
+  const [cardSurchargeRate, setCardSurchargeRate] = useState(0)
   const [settings, setSettings] = useState<Record<string, string>>({})
 
   // Promotions
@@ -46,7 +47,6 @@ export default function POSPage() {
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [discountValue, setDiscountValue] = useState(0)
   const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0)
-  const [surchargeAmount, setSurchargeAmount] = useState(0)
 
   // Variant selection
   const [variantProduct, setVariantProduct] = useState<Product | null>(null)
@@ -74,6 +74,8 @@ export default function POSPage() {
       const rate = parseFloat(s.tax_rate ?? '9') / 100
       setTaxRate(isNaN(rate) ? DEFAULT_TAX_RATE : rate)
       setTaxInclusive(s.tax_inclusive === 'true')
+      const surchargeRate = parseFloat(s.card_surcharge_pct ?? '0')
+      setCardSurchargeRate(isNaN(surchargeRate) ? 0 : surchargeRate)
       setPromotions(promos)
       setLoadingProducts(false)
     })
@@ -171,7 +173,6 @@ export default function POSPage() {
     setCustomer(null)
     setDiscountValue(0)
     setLoyaltyPointsToRedeem(0)
-    setSurchargeAmount(0)
   }
 
   async function handleHold() {
@@ -185,7 +186,7 @@ export default function POSPage() {
         discountType,
         discountValue,
         loyaltyPointsToRedeem,
-        surchargeAmount,
+        surchargeAmount: 0,
       })
       clearCart()
       toast.success(`Order held: ${label}`)
@@ -202,7 +203,6 @@ export default function POSPage() {
     setDiscountType(d.discountType)
     setDiscountValue(d.discountValue)
     setLoyaltyPointsToRedeem(d.loyaltyPointsToRedeem)
-    setSurchargeAmount(d.surchargeAmount ?? 0)
     setHeldOrders(prev => prev.filter(o => o.id !== order.id))
     toast.success(`Resumed: ${order.label}`)
   }
@@ -220,11 +220,12 @@ export default function POSPage() {
     [cartItems, promoDiscounts]
   )
 
+  // Base total — surcharge is added in PaymentModal for card payments
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
-    cartItemsWithPromo, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount, taxRate, taxInclusive
+    cartItemsWithPromo, discountType, discountValue, loyaltyPointsToRedeem, 0, taxRate, taxInclusive
   )
 
-  async function handleCompleteSale(method: PaymentMethod, amountTendered: number, splits?: SplitPayment[]) {
+  async function handleCompleteSale(method: PaymentMethod, amountTendered: number, splits?: SplitPayment[], surchargeAmt = 0) {
     if (!user) return
     if (method === 'account' && !customer) {
       toast.error('Select a customer to charge to account')
@@ -232,6 +233,7 @@ export default function POSPage() {
     }
     setShowPayment(false)
     try {
+      const finalTotal = total + surchargeAmt
       const sale = await completeSale({
         locationId: user.location_id!,
         userId: user.id,
@@ -240,14 +242,14 @@ export default function POSPage() {
         subtotal,
         discountAmount: discountAmount + loyaltyDiscount,
         taxAmount,
-        surchargeAmount,
-        total,
+        surchargeAmount: surchargeAmt,
+        total: finalTotal,
         paymentMethod: method,
         splitPayments: splits,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         notes: '',
       })
-      const pointsEarned = customer ? calculateLoyaltyPoints(total) : 0
+      const pointsEarned = customer ? calculateLoyaltyPoints(finalTotal) : 0
       setCompletedSale({ sale, amountTendered, pointsEarned, splits })
     } catch (err) {
       toast.error('Failed to complete sale. Please try again.')
@@ -315,7 +317,6 @@ export default function POSPage() {
           discountType={discountType}
           discountValue={discountValue}
           loyaltyPointsToRedeem={loyaltyPointsToRedeem}
-          surchargeAmount={surchargeAmount}
           taxRate={taxRate}
           taxInclusive={taxInclusive}
           appliedPromoName={appliedPromo}
@@ -326,7 +327,6 @@ export default function POSPage() {
           onDiscountTypeChange={setDiscountType}
           onDiscountValueChange={setDiscountValue}
           onLoyaltyRedeemChange={setLoyaltyPointsToRedeem}
-          onSurchargeChange={setSurchargeAmount}
           onCharge={() => setShowPayment(true)}
           onClear={clearCart}
           onHold={handleHold}
@@ -339,6 +339,7 @@ export default function POSPage() {
           total={total}
           loyaltyPointsRedeemed={loyaltyPointsToRedeem}
           hasCustomer={!!customer}
+          cardSurchargeRate={cardSurchargeRate}
           onConfirm={handleCompleteSale}
           onClose={() => setShowPayment(false)}
         />

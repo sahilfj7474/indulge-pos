@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CartItem, Customer } from '@/types'
 import { formatCurrency, cn } from '@/lib/utils'
-import { Minus, Plus, Trash2, Tag, MessageSquare, PauseCircle, Percent, Zap } from 'lucide-react'
+import { Minus, Plus, Trash2, Tag, MessageSquare, PauseCircle, Zap } from 'lucide-react'
 import CustomerSearch from './CustomerSearch'
 
 export const DEFAULT_TAX_RATE = 0.09
@@ -46,7 +46,6 @@ interface Props {
   discountType: 'percentage' | 'fixed'
   discountValue: number
   loyaltyPointsToRedeem: number
-  surchargeAmount: number
   taxRate?: number
   taxInclusive?: boolean
   appliedPromoName?: string | null
@@ -57,7 +56,6 @@ interface Props {
   onDiscountTypeChange: (t: 'percentage' | 'fixed') => void
   onDiscountValueChange: (v: number) => void
   onLoyaltyRedeemChange: (points: number) => void
-  onSurchargeChange: (v: number) => void
   onCharge: () => void
   onClear: () => void
   onHold: () => void
@@ -69,7 +67,6 @@ export default function Cart({
   discountType,
   discountValue,
   loyaltyPointsToRedeem,
-  surchargeAmount,
   taxRate = DEFAULT_TAX_RATE,
   taxInclusive = false,
   appliedPromoName,
@@ -80,7 +77,6 @@ export default function Cart({
   onDiscountTypeChange,
   onDiscountValueChange,
   onLoyaltyRedeemChange,
-  onSurchargeChange,
   onCharge,
   onClear,
   onHold,
@@ -89,10 +85,11 @@ export default function Cart({
   const [editingQtyIndex, setEditingQtyIndex] = useState<number | null>(null)
   const [editingQtyValue, setEditingQtyValue] = useState('')
   const { subtotal, discountAmount, loyaltyDiscount, taxAmount, total } = computeTotals(
-    items, discountType, discountValue, loyaltyPointsToRedeem, surchargeAmount, taxRate, taxInclusive
+    items, discountType, discountValue, loyaltyPointsToRedeem, 0, taxRate, taxInclusive
   )
   const maxRedeem = customer ? Math.min(customer.loyalty_points, Math.floor(subtotal - discountAmount)) : 0
-  const taxLabel = `${(taxRate * 100).toFixed(0)}% VAT${taxInclusive ? ' (incl.)' : ''}`
+  const taxPct = +(taxRate * 100).toFixed(4)
+  const taxLabel = `${taxPct}% VAT${taxInclusive ? ' (incl.)' : ''}`
 
   function toggleNote(i: number) {
     setExpandedNotes(prev => {
@@ -246,21 +243,6 @@ export default function Cart({
             />
           </div>
 
-          {/* Surcharge */}
-          <div className="flex items-center gap-2">
-            <Percent size={13} className="text-slate-500 shrink-0" />
-            <span className="text-xs text-slate-500 flex-1">Surcharge</span>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={surchargeAmount || ''}
-              onChange={e => onSurchargeChange(parseFloat(e.target.value) || 0)}
-              className="w-16 px-2 py-1.5 bg-blue-50 border border-blue-200 rounded text-sm text-slate-900 text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="0.00"
-            />
-          </div>
-
           {/* Loyalty redemption */}
           {customer && customer.loyalty_points > 0 && (
             <div className="flex items-center gap-2">
@@ -297,11 +279,6 @@ export default function Cart({
         <div className="flex justify-between text-sm text-slate-500">
           <span>{taxLabel}</span><span>{formatCurrency(taxAmount)}</span>
         </div>
-        {surchargeAmount > 0 && (
-          <div className="flex justify-between text-sm text-yellow-700">
-            <span>Surcharge</span><span>+{formatCurrency(surchargeAmount)}</span>
-          </div>
-        )}
         <div className="flex justify-between text-base font-bold text-slate-900 border-t border-blue-200 pt-1.5 mt-1">
           <span>Total</span>
           <span className="text-blue-500">{formatCurrency(total)}</span>

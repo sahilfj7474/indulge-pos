@@ -54,7 +54,7 @@ export default function Receipt({
   const vatNumber = settings.vat_number || ''
   const receiptHeader = settings.receipt_header || ''
   const receiptFooter = settings.receipt_footer || 'Thank you for your purchase!'
-  const taxLabel = `${(taxRate * 100).toFixed(0)}% VAT${taxInclusive ? ' (incl.)' : ''}`
+  const taxLabel = `${+(taxRate * 100).toFixed(4)}% VAT${taxInclusive ? ' (incl.)' : ''}`
 
   return (
     <div className="fixed inset-0 bg-blue-950/70 flex items-center justify-center z-50 p-4">
