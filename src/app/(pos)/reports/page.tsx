@@ -39,6 +39,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 const CHART_OPTIONS = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
     x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
@@ -261,18 +262,20 @@ export default function ReportsPage() {
           {trend.labels.length > 1 ? (
             <div className="bg-white border border-blue-100 rounded-xl p-4">
               <h3 className="text-sm font-medium text-slate-600 mb-3">Sales Trend</h3>
-              <Line data={{
-                labels: trend.labels,
-                datasets: [{
-                  data: trend.data,
-                  borderColor: '#6366f1',
-                  backgroundColor: 'rgba(99,102,241,0.1)',
-                  fill: true,
-                  tension: 0.4,
-                  pointRadius: 4,
-                  pointBackgroundColor: '#6366f1',
-                }],
-              }} options={CHART_OPTIONS} />
+              <div className="h-64">
+                <Line data={{
+                  labels: trend.labels,
+                  datasets: [{
+                    data: trend.data,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#6366f1',
+                  }],
+                }} options={CHART_OPTIONS} />
+              </div>
             </div>
           ) : (
             <div className="bg-white border border-blue-100 rounded-xl p-8 text-center text-slate-400 text-sm">
@@ -295,10 +298,12 @@ export default function ReportsPage() {
             <>
               <div className="bg-white border border-blue-100 rounded-xl p-4">
                 <h3 className="text-sm font-medium text-slate-600 mb-3">Top Products by Revenue</h3>
-                <Bar data={{
-                  labels: byProduct.slice(0,10).map(p => p.name.length > 20 ? p.name.slice(0,18)+'…' : p.name),
-                  datasets: [{ data: byProduct.slice(0,10).map(p => p.total), backgroundColor: CHART_COLORS }],
-                }} options={{ ...CHART_OPTIONS, plugins: { legend: { display: false } } }} />
+                <div className="h-64">
+                  <Bar data={{
+                    labels: byProduct.slice(0,10).map(p => p.name.length > 20 ? p.name.slice(0,18)+'…' : p.name),
+                    datasets: [{ data: byProduct.slice(0,10).map(p => p.total), backgroundColor: CHART_COLORS }],
+                  }} options={{ ...CHART_OPTIONS, plugins: { legend: { display: false } } }} />
+                </div>
               </div>
               <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
@@ -374,10 +379,12 @@ export default function ReportsPage() {
           {byStaff.length > 0 ? (
             <>
               <div className="bg-white border border-blue-100 rounded-xl p-4">
-                <Bar data={{
-                  labels: byStaff.map(s => s.name),
-                  datasets: [{ data: byStaff.map(s => s.total), backgroundColor: CHART_COLORS }],
-                }} options={CHART_OPTIONS} />
+                <div className="h-64">
+                  <Bar data={{
+                    labels: byStaff.map(s => s.name),
+                    datasets: [{ data: byStaff.map(s => s.total), backgroundColor: CHART_COLORS }],
+                  }} options={CHART_OPTIONS} />
+                </div>
               </div>
               <div className="bg-white border border-blue-100 rounded-xl overflow-hidden">
                 <table className="w-full text-sm">
@@ -443,10 +450,12 @@ export default function ReportsPage() {
         <div className="bg-white border border-blue-100 rounded-xl p-4">
           <h3 className="text-sm font-medium text-slate-600 mb-3">Revenue by Hour of Day</h3>
           {sales.length > 0 ? (
-            <Bar data={{
-              labels: hourly.map(h => h.label),
-              datasets: [{ data: hourly.map(h => h.total), backgroundColor: '#6366f1', borderRadius: 4 }],
-            }} options={CHART_OPTIONS} />
+            <div className="h-64">
+              <Bar data={{
+                labels: hourly.map(h => h.label),
+                datasets: [{ data: hourly.map(h => h.total), backgroundColor: '#6366f1', borderRadius: 4 }],
+              }} options={CHART_OPTIONS} />
+            </div>
           ) : <EmptyState />}
         </div>
       )}

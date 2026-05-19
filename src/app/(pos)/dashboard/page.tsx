@@ -29,6 +29,7 @@ const TODAY = localToday()
 
 const CHART_OPTIONS = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
     x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
@@ -193,7 +194,7 @@ export default function DashboardPage() {
               No data for the selected period.
             </div>
           ) : (
-            <>
+            <div className="h-64">
               {chartTab === 'sales' && (
                 <Line
                   data={{
@@ -281,7 +282,7 @@ export default function DashboardPage() {
                       options={CHART_OPTIONS}
                     />
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
