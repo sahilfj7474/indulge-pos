@@ -84,10 +84,11 @@ export default function DashboardPage() {
       setLocations(locs.filter(l => l.is_active !== false))
       // start with "All Stores" — selectedLocationId stays ''
     })
-  }, [isManager]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isManager])
 
   const load = useCallback(async () => {
-    if (!effectiveLocationId) return
+    // Non-managers must have a location; managers can load with '' = all stores
+    if (!isManager && !effectiveLocationId) return
     setLoading(true)
     const [statsData, salesData] = await Promise.all([
       getDashboardStats(effectiveLocationId, dateFrom, dateTo),

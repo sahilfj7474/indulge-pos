@@ -14,8 +14,9 @@ export interface User {
   email: string
   full_name: string
   role: UserRole
-  location_id: string | null
+  location_id: string | null      // primary / home location (used for POS terminal)
   location?: Location
+  location_ids: string[] | null   // null = all locations; [id1,id2] = specific locations
   is_active: boolean
   created_at: string
 }

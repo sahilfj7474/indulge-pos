@@ -133,6 +133,7 @@ export async function updateUser(id: string, data: Partial<{
   full_name: string
   role: string
   location_id: string | null
+  location_ids: string[] | null
   is_active: boolean
 }>): Promise<void> {
   const supabase = createClient()
