@@ -213,13 +213,13 @@ export default function ProductsPage() {
                       {/* Thumbnail */}
                       <td className="px-4 py-2">
                         {product.image_url ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-blue-100 bg-blue-50 flex-shrink-0">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-blue-100 bg-white flex-shrink-0">
                             <Image
                               src={product.image_url}
                               alt={product.name}
                               width={40}
                               height={40}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain p-0.5"
                             />
                           </div>
                         ) : (
