@@ -123,7 +123,7 @@ CREATE TABLE sales (
   discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
   tax_amount      NUMERIC(10,2) NOT NULL DEFAULT 0,
   total           NUMERIC(10,2) NOT NULL DEFAULT 0,
-  payment_method  TEXT NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash','card','bank_transfer','loyalty_points','split')),
+  payment_method  TEXT NOT NULL DEFAULT 'cash', -- no constraint: dynamic methods managed via settings
   notes           TEXT,
   status          TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed','refunded','partial_refund','voided')),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
