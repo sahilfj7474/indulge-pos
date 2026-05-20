@@ -101,26 +101,43 @@ function ActionMenu({ user, onEdit, onPermissions, onToggleActive, onDelete }: {
   onDelete: () => void
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos,  setPos]  = useState({ top: 0, right: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  function handleOpen() {
+    if (!btnRef.current) return
+    const r = btnRef.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+    setOpen(o => !o)
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) &&
+          btnRef.current && !btnRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
     }
     if (open) document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-blue-100 rounded-lg transition-colors"
       >
         <MoreVertical size={15} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-white border border-blue-100 rounded-xl shadow-xl z-30 overflow-hidden w-44">
+        <div
+          ref={menuRef}
+          style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 9999 }}
+          className="bg-white border border-blue-100 rounded-xl shadow-xl overflow-hidden w-44"
+        >
           <button onClick={() => { onEdit(); setOpen(false) }}
             className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 text-left transition-colors">
             <Pencil size={13} /> Edit
@@ -142,7 +159,7 @@ function ActionMenu({ user, onEdit, onPermissions, onToggleActive, onDelete }: {
           </button>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
