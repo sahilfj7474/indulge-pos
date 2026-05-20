@@ -448,6 +448,10 @@ export async function exportToExcel(opts: ExcelExportOptions): Promise<void> {
   const a   = document.createElement('a')
   a.href     = url
   a.download = `${opts.filename}.xlsx`
+  a.style.display = 'none'
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  document.body.removeChild(a)
+  // Revoke after a short delay so the browser has time to start the download
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
 }

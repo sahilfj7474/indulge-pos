@@ -225,8 +225,9 @@ export default function ReportsPage() {
   }
 
   // ── Full Report: 12-sheet workbook ────────────────────────────────────────
-  function exportFullReport() {
-    exportToExcel({
+  async function exportFullReport() {
+    try {
+      await exportToExcel({
       ...xlBase,
       filename:    `indulge-full-report-${dateFrom}-${dateTo}`,
       reportTitle: 'Full Sales Report',
@@ -262,7 +263,7 @@ export default function ReportsPage() {
             { metric: 'Total Transactions',        value: String(totalTx) },
             { metric: 'Average Sale Value',        value: `FJD ${avgTx.toFixed(2)}` },
             { metric: 'Refund Transactions',       value: String(refundDetails.length) },
-            { metric: 'Top Performing Day',        value: dailySummary.sort((a,b) => b.total-a.total)[0]?.date ?? '—' },
+            { metric: 'Top Performing Day',        value: [...dailySummary].sort((a,b) => b.total-a.total)[0]?.date ?? '—' },
             { metric: 'Busiest Hour',              value: [...hourly].sort((a,b) => b.total-a.total)[0]?.label ?? '—' },
           ],
         },
@@ -491,7 +492,10 @@ export default function ReportsPage() {
           totals: { sale_id: 'TOTAL', amount: refundDetails.reduce((s, r) => s + r.amount, 0) },
         },
       ],
-    })
+      })
+    } catch (err) {
+      console.error('[Full Report] export failed:', err)
+    }
     setExportOpen(false)
   }
 

@@ -3,6 +3,11 @@ import { localDayStart, localDayEnd } from '@/lib/utils'
 
 // ── Core data types ───────────────────────────────────────────────────────────
 
+export interface SplitEntry {
+  method: string
+  amount: number
+}
+
 export interface SaleRow {
   id: string
   created_at: string
@@ -11,6 +16,8 @@ export interface SaleRow {
   discount_amount: number
   tax_amount: number
   payment_method: string
+  /** Populated for split-payment sales: { splits: [{method, amount}, …] } */
+  payment_details: { splits: SplitEntry[] } | null
   status: string
   user_id: string
   customer_id: string | null
@@ -60,7 +67,7 @@ export async function fetchSalesForReport(
     .from('sales')
     .select(`
       id, created_at, total, subtotal, discount_amount, tax_amount,
-      payment_method, status, user_id, customer_id,
+      payment_method, payment_details, status, user_id, customer_id,
       user:users(full_name),
       items:sale_items(product_id, quantity, total,
         product:products(name, category_id, cost, category:categories(name)))
@@ -333,12 +340,20 @@ export function aggregateByCategory(sales: SaleRow[]) {
     .sort((a, b) => b.total - a.total)
 }
 
-/** Revenue per payment method */
+/** Revenue per payment method — split payments are expanded into their component methods */
 export function aggregateByPayment(sales: SaleRow[]) {
   const map = new Map<string, { total: number; count: number }>()
   for (const s of sales) {
-    const ex = map.get(s.payment_method) ?? { total: 0, count: 0 }
-    map.set(s.payment_method, { total: ex.total + s.total, count: ex.count + 1 })
+    if (s.payment_method === 'split' && s.payment_details?.splits?.length) {
+      // Distribute each portion to its own payment method bucket
+      for (const sp of s.payment_details.splits) {
+        const ex = map.get(sp.method) ?? { total: 0, count: 0 }
+        map.set(sp.method, { total: ex.total + sp.amount, count: ex.count + 1 })
+      }
+    } else {
+      const ex = map.get(s.payment_method) ?? { total: 0, count: 0 }
+      map.set(s.payment_method, { total: ex.total + s.total, count: ex.count + 1 })
+    }
   }
   return Array.from(map.entries())
     .map(([method, v]) => ({
@@ -396,6 +411,18 @@ export function aggregateDiscountByStaff(sales: SaleRow[]) {
 
 // ── Z / X Report ──────────────────────────────────────────────────────────────
 
+/** Helper: sum revenue for a given payment method, expanding split transactions */
+function sumByMethod(sales: SaleRow[], method: string): number {
+  return parseFloat(sales.reduce((acc, r) => {
+    if (r.payment_method === method) return acc + r.total
+    if (r.payment_method === 'split') {
+      const sp = r.payment_details?.splits?.find(x => x.method === method)
+      if (sp) return acc + sp.amount
+    }
+    return acc
+  }, 0).toFixed(2))
+}
+
 export function buildZReportData(sales: SaleRow[], locationName: string, date: string, cashierName: string) {
   const completed = sales.filter(s => s.status === 'completed')
   return {
@@ -406,10 +433,10 @@ export function buildZReportData(sales: SaleRow[], locationName: string, date: s
     totalTransactions: completed.length,
     totalDiscount:     parseFloat(completed.reduce((s, r) => s + r.discount_amount, 0).toFixed(2)),
     totalTax:          parseFloat(completed.reduce((s, r) => s + r.tax_amount, 0).toFixed(2)),
-    cashSales:         parseFloat(completed.filter(r => r.payment_method === 'cash').reduce((s, r) => s + r.total, 0).toFixed(2)),
-    cardSales:         parseFloat(completed.filter(r => r.payment_method === 'card').reduce((s, r) => s + r.total, 0).toFixed(2)),
-    bankSales:         parseFloat(completed.filter(r => r.payment_method === 'bank_transfer').reduce((s, r) => s + r.total, 0).toFixed(2)),
-    loyaltySales:      parseFloat(completed.filter(r => r.payment_method === 'loyalty_points').reduce((s, r) => s + r.total, 0).toFixed(2)),
+    cashSales:         sumByMethod(completed, 'cash'),
+    cardSales:         sumByMethod(completed, 'card'),
+    bankSales:         sumByMethod(completed, 'bank_transfer'),
+    loyaltySales:      sumByMethod(completed, 'loyalty_points'),
     netSales:          parseFloat((completed.reduce((s, r) => s + r.total, 0) - completed.reduce((s, r) => s + r.discount_amount, 0)).toFixed(2)),
     topProducts:       aggregateByProduct(completed, 5),
   }

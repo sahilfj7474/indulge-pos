@@ -61,22 +61,39 @@ export async function getDailySummary(locationId: string, date: string) {
 
   const { data } = await supabase
     .from('sales')
-    .select('total, discount_amount, tax_amount, payment_method, status')
+    .select('total, discount_amount, tax_amount, payment_method, payment_details, status')
     .eq('location_id', locationId)
     .gte('created_at', start)
     .lte('created_at', end)
 
-  const sales = (data ?? []) as { total: number; discount_amount: number; tax_amount: number; payment_method: string; status: string }[]
+  type SaleSum = {
+    total: number; discount_amount: number; tax_amount: number
+    payment_method: string; status: string
+    payment_details: { splits: { method: string; amount: number }[] } | null
+  }
+  const sales = (data ?? []) as SaleSum[]
   const completed = sales.filter(s => s.status === 'completed')
 
+  /** Sum a single payment method, expanding split transactions */
+  function sumMethod(method: string): number {
+    return completed.reduce((acc, r) => {
+      if (r.payment_method === method) return acc + r.total
+      if (r.payment_method === 'split') {
+        const sp = r.payment_details?.splits?.find(x => x.method === method)
+        if (sp) return acc + sp.amount
+      }
+      return acc
+    }, 0)
+  }
+
   return {
-    totalSales:       completed.reduce((s, r) => s + r.total, 0),
+    totalSales:        completed.reduce((s, r) => s + r.total, 0),
     totalTransactions: completed.length,
-    totalDiscount:    completed.reduce((s, r) => s + r.discount_amount, 0),
-    totalTax:         completed.reduce((s, r) => s + r.tax_amount, 0),
-    cashSales:        completed.filter(r => r.payment_method === 'cash').reduce((s, r) => s + r.total, 0),
-    cardSales:        completed.filter(r => r.payment_method === 'card').reduce((s, r) => s + r.total, 0),
-    bankSales:        completed.filter(r => r.payment_method === 'bank_transfer').reduce((s, r) => s + r.total, 0),
-    loyaltySales:     completed.filter(r => r.payment_method === 'loyalty_points').reduce((s, r) => s + r.total, 0),
+    totalDiscount:     completed.reduce((s, r) => s + r.discount_amount, 0),
+    totalTax:          completed.reduce((s, r) => s + r.tax_amount, 0),
+    cashSales:         sumMethod('cash'),
+    cardSales:         sumMethod('card'),
+    bankSales:         sumMethod('bank_transfer'),
+    loyaltySales:      sumMethod('loyalty_points'),
   }
 }
