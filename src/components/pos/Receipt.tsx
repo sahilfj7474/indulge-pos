@@ -132,18 +132,18 @@ export default function Receipt({
           {/* ── Printable content ────────────────────────────── */}
           <div
             ref={ref}
-            className="receipt-print bg-white text-black font-mono text-[11px] leading-snug"
+            className="receipt-print bg-white text-black font-mono text-[11px] leading-snug mx-auto"
             style={{ width: '100%', maxWidth: 320 }}
           >
             {/* ── HEADER ── */}
             <div className="text-center mb-1">
-              {(template?.show_logo ?? true) && (
+              {template == null || template.show_logo ? (
                 <img
                   src="/logo-black.png"
                   alt="Indulge"
                   className="h-12 w-auto mx-auto mb-1 object-contain"
                 />
-              )}
+              ) : null}
               <p className="font-bold text-sm tracking-wide">{storeName.toUpperCase()}</p>
               {businessAddr  && <p>{businessAddr}</p>}
               {businessPhone && <p>Tel: {businessPhone}</p>}
