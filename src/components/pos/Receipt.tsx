@@ -27,15 +27,12 @@ interface Props {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const W = 40 // receipt character width
-
-const DIV  = '-'.repeat(W)   // thin divider
-const HDIV = '='.repeat(W)   // heavy divider
-
-function center(text: string) {
-  const pad = Math.max(0, Math.floor((W - text.length) / 2))
-  return ' '.repeat(pad) + text
-}
+const ThinRule = () => (
+  <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
+)
+const ThickRule = () => (
+  <div className="border-0 border-t-2 border-black my-0.5 w-full" />
+)
 
 function Row({ label, value, bold, className }: {
   label: string; value: string; bold?: boolean; className?: string
@@ -89,13 +86,14 @@ export default function Receipt({
   const showLoyalty    = template?.show_loyalty_points ?? true
   const hideDiscIfZero = template?.hide_discount_if_zero ?? true
 
-  const lItem     = template?.label_item     || 'ITEMS'
+  const lItem     = template?.label_item     || 'Item'
+  const lPrice    = template?.label_price    || 'Price'
   const lSubtotal = template?.label_subtotal || 'Subtotal'
   const lDiscount = template?.label_discount || 'Discount'
   const lTax      = template?.label_tax      || 'VAT'
   const lTotal    = template?.label_total    || 'TOTAL'
   const lChange   = template?.label_change   || 'Change'
-  const lCashier  = template?.label_cashier  || 'Cashier'
+  const lCashier  = template?.label_cashier  || 'Served by'
 
   const taxPct  = +(taxRate * 100).toFixed(4)
   const taxLabel = `${taxPct}% ${lTax}`
@@ -139,11 +137,13 @@ export default function Receipt({
           >
             {/* ── HEADER ── */}
             <div className="text-center mb-1">
-              <img
-                src="/logo-black.png"
-                alt="Indulge"
-                className="h-12 w-auto mx-auto mb-1 object-contain"
-              />
+              {(template?.show_logo ?? true) && (
+                <img
+                  src="/logo-black.png"
+                  alt="Indulge"
+                  className="h-12 w-auto mx-auto mb-1 object-contain"
+                />
+              )}
               <p className="font-bold text-sm tracking-wide">{storeName.toUpperCase()}</p>
               {businessAddr  && <p>{businessAddr}</p>}
               {businessPhone && <p>Tel: {businessPhone}</p>}
@@ -153,9 +153,9 @@ export default function Receipt({
             </div>
 
             {/* ── Receipt title ── */}
-            <p>{HDIV}</p>
+            <ThickRule />
             <p className="text-center font-bold tracking-widest">{receiptTitle}</p>
-            <p>{HDIV}</p>
+            <ThickRule />
 
             {/* ── Transaction meta ── */}
             <div className="space-y-0.5 my-1">
@@ -166,9 +166,12 @@ export default function Receipt({
             </div>
 
             {/* ── Items ── */}
-            <p>{DIV}</p>
-            <p className="font-bold my-0.5">{lItem}</p>
-            <p>{DIV}</p>
+            <ThinRule />
+            <div className="flex justify-between font-bold my-0.5">
+              <span>{lItem}</span>
+              <span>{lPrice}</span>
+            </div>
+            <ThinRule />
 
             <div className="space-y-1.5 my-1">
               {items.map((item, i) => {
@@ -192,7 +195,7 @@ export default function Receipt({
             </div>
 
             {/* ── Totals ── */}
-            <p>{DIV}</p>
+            <ThinRule />
             <div className="space-y-0.5 my-1">
               <Row label={lSubtotal} value={formatCurrency(displaySubtotal)} />
               {(displayDiscount > 0 || !hideDiscIfZero) && (
@@ -206,12 +209,12 @@ export default function Receipt({
                 <Row label="Surcharge" value={`+${formatCurrency(surcharge)}`} />
               )}
             </div>
-            <p>{HDIV}</p>
+            <ThickRule />
             <div className="flex justify-between font-bold text-sm my-1 tracking-wide">
               <span>{lTotal}</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
-            <p>{HDIV}</p>
+            <ThickRule />
 
             {/* ── Payment ── */}
             <div className="space-y-0.5 my-1">
@@ -253,7 +256,7 @@ export default function Receipt({
             {/* ── Loyalty ── */}
             {customer && showLoyalty && (
               <>
-                <p>{DIV}</p>
+                <ThinRule />
                 <div className="space-y-0.5 my-1">
                   {loyaltyPointsEarned > 0 && (
                     <Row label="Points Earned" value={`+${loyaltyPointsEarned} pts`} />
@@ -267,12 +270,12 @@ export default function Receipt({
             )}
 
             {/* ── Footer ── */}
-            <p>{DIV}</p>
+            <ThinRule />
             <div className="text-center my-1 space-y-0.5">
-              <p className="font-bold">{center(`* ${receiptFooter} *`)}</p>
-              <p>{center('Please visit us again!')}</p>
+              <p className="font-bold">* {receiptFooter} *</p>
+              <p>Please visit us again!</p>
             </div>
-            <p>{DIV}</p>
+            <ThinRule />
           </div>
         </div>
       </div>

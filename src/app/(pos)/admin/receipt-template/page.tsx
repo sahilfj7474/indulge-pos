@@ -46,15 +46,9 @@ function ThermalPreview({ t }: { t: ReceiptTemplateInput }) {
     >
       {/* Header */}
       <div className="text-center mb-1 space-y-0.5">
-        {t.show_logo && (
-          <p className="font-extrabold text-sm tracking-widest">
-            {SAMPLE_STORE.toUpperCase()}
-          </p>
-        )}
-        {!t.show_logo && <p className="font-bold">{SAMPLE_STORE}</p>}
-        {t.trading_name && t.show_logo && (
-          <p className="text-[10px]">{t.trading_name}</p>
-        )}
+        <p className="font-extrabold text-sm tracking-widest">
+          {SAMPLE_STORE.toUpperCase()}
+        </p>
         {t.header_text && <p className="italic text-[10px] mt-0.5">{t.header_text}</p>}
         {t.show_address && <p className="text-[10px]">{SAMPLE_ADDR}</p>}
         {t.show_email   && <p className="text-[10px]">Email: {SAMPLE_EMAIL}</p>}
