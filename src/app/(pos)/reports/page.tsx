@@ -190,21 +190,166 @@ export default function ReportsPage() {
               <div
                 ref={exportMenuRef}
                 style={{ position: 'fixed', top: exportPos.top, right: exportPos.right, zIndex: 9999 }}
-                className="bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden"
+                className="bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden w-56"
               >
+                {/* ── Full Report (all sheets) ── */}
+                <button
+                  onClick={() => {
+                    exportToExcel({
+                      filename:      `indulge-full-report-${dateFrom}-${dateTo}`,
+                      reportTitle:   'Full Sales Report',
+                      locationLabel: exportLocationLabel,
+                      dateFrom,
+                      dateTo,
+                      generatedBy:   user?.full_name ?? '',
+                      sheets: [
+                        // Sheet 1 – Performance Summary
+                        {
+                          name:    'Performance Summary',
+                          kpis: [
+                            { label: 'Gross Sales',   value: `FJD ${totalRevenue.toFixed(2)}` },
+                            { label: 'Net Sales',     value: `FJD ${netSales.toFixed(2)}` },
+                            { label: 'Gross Profit',  value: totalCOGS > 0 ? `FJD ${grossProfit.toFixed(2)}` : '—' },
+                            { label: 'Transactions',  value: String(totalTx) },
+                          ],
+                          columns: [
+                            { header: 'Metric',      key: 'metric', width: 38 },
+                            { header: 'Value',       key: 'value',  width: 22, align: 'right' },
+                          ],
+                          data: [
+                            { _section: true, metric: '◆  REVENUE' },
+                            { metric: 'Gross Sales (incl. tax)',   value: `FJD ${totalRevenue.toFixed(2)}` },
+                            { metric: 'Sales EX Tax',              value: `FJD ${totalExTax.toFixed(2)}` },
+                            { metric: 'Refunds',                   value: `FJD ${refundsTotal.toFixed(2)}` },
+                            { metric: 'Net Sales',                 value: `FJD ${netSales.toFixed(2)}` },
+                            { _section: true, metric: '◆  PROFITABILITY' },
+                            { metric: 'Cost of Goods Sold (COGS)', value: totalCOGS > 0 ? `FJD ${totalCOGS.toFixed(2)}` : 'N/A' },
+                            { metric: 'Gross Profit',              value: totalCOGS > 0 ? `FJD ${grossProfit.toFixed(2)}` : 'N/A' },
+                            { metric: 'Gross Margin %',            value: totalCOGS > 0 ? `${marginPct.toFixed(1)}%` : 'N/A' },
+                            { _section: true, metric: '◆  DISCOUNTS & TAX' },
+                            { metric: 'Total Discounts',           value: `FJD ${totalDiscount.toFixed(2)}` },
+                            { metric: 'Tax Collected',             value: `FJD ${totalTax.toFixed(2)}` },
+                            { _section: true, metric: '◆  OPERATIONS' },
+                            { metric: 'Total Transactions',        value: String(totalTx) },
+                            { metric: 'Average Sale Value',        value: `FJD ${avgTx.toFixed(2)}` },
+                          ],
+                        },
+                        // Sheet 2 – Detailed Transactions
+                        {
+                          name:    'Detailed Transactions',
+                          kpis: [
+                            { label: 'Total Revenue',   value: `FJD ${totalRevenue.toFixed(2)}` },
+                            { label: 'Transactions',    value: String(totalTx) },
+                            { label: 'Avg. Sale',       value: `FJD ${avgTx.toFixed(2)}` },
+                            { label: 'Total Discounts', value: `FJD ${totalDiscount.toFixed(2)}` },
+                          ],
+                          columns: [
+                            { header: 'Date',           key: 'date',     width: 14 },
+                            { header: 'Cashier',        key: 'cashier',  width: 22 },
+                            { header: 'Payment Method', key: 'payment',  width: 20 },
+                            { header: 'Subtotal',       key: 'subtotal', width: 14, type: 'currency' },
+                            { header: 'Discount',       key: 'discount', width: 14, type: 'currency' },
+                            { header: 'Tax',            key: 'tax',      width: 12, type: 'currency' },
+                            { header: 'Total',          key: 'total',    width: 14, type: 'currency' },
+                          ],
+                          data: sales.map(s => ({
+                            date:     s.created_at.slice(0, 10),
+                            cashier:  s.user?.full_name ?? '',
+                            payment:  s.payment_method.replace(/_/g, ' '),
+                            subtotal: s.subtotal,
+                            discount: s.discount_amount,
+                            tax:      s.tax_amount,
+                            total:    s.total,
+                          })),
+                          totals: {
+                            date:     'TOTALS',
+                            subtotal: sales.reduce((sum, s) => sum + s.subtotal, 0),
+                            discount: sales.reduce((sum, s) => sum + s.discount_amount, 0),
+                            tax:      sales.reduce((sum, s) => sum + s.tax_amount, 0),
+                            total:    sales.reduce((sum, s) => sum + s.total, 0),
+                          },
+                        },
+                        // Sheet 3 – Top Products
+                        {
+                          name:    'Top Products',
+                          columns: [
+                            { header: 'Rank',     key: 'rank',  width: 8,  type: 'integer', align: 'center' },
+                            { header: 'Product',  key: 'name',  width: 36 },
+                            { header: 'Qty Sold', key: 'qty',   width: 14, type: 'integer' },
+                            { header: 'Revenue',  key: 'total', width: 16, type: 'currency' },
+                          ],
+                          data: byProduct.map((p, i) => ({ rank: i + 1, name: p.name, qty: p.qty, total: p.total })),
+                          totals: {
+                            name:  'TOTAL',
+                            qty:   byProduct.reduce((s, p) => s + p.qty, 0),
+                            total: byProduct.reduce((s, p) => s + p.total, 0),
+                          },
+                        },
+                        // Sheet 4 – Staff Performance
+                        {
+                          name:    'Staff Performance',
+                          columns: [
+                            { header: 'Cashier',         key: 'name',     width: 26 },
+                            { header: 'Transactions',    key: 'count',    width: 16, type: 'integer' },
+                            { header: 'Discounts Given', key: 'discount', width: 18, type: 'currency' },
+                            { header: 'Revenue',         key: 'total',    width: 16, type: 'currency' },
+                          ],
+                          data:   byStaff.map(s => ({ name: s.name, count: s.count, discount: s.discount, total: s.total })),
+                          totals: {
+                            name:     'TOTALS',
+                            count:    byStaff.reduce((s, r) => s + r.count, 0),
+                            discount: byStaff.reduce((s, r) => s + r.discount, 0),
+                            total:    byStaff.reduce((s, r) => s + r.total, 0),
+                          },
+                        },
+                        // Sheet 5 – Payment Breakdown
+                        {
+                          name:    'Payment Breakdown',
+                          columns: [
+                            { header: 'Payment Method', key: 'method', width: 22 },
+                            { header: 'Revenue',        key: 'total',  width: 18, type: 'currency' },
+                            { header: 'Share %',        key: 'share',  width: 14, type: 'percent' },
+                          ],
+                          data: byPayment.map(p => ({
+                            method: p.method.replace(/_/g, ' '),
+                            total:  p.total,
+                            share:  totalRevenue > 0 ? parseFloat(((p.total / totalRevenue) * 100).toFixed(1)) : 0,
+                          })),
+                          totals: {
+                            method: 'TOTAL',
+                            total:  byPayment.reduce((s, p) => s + p.total, 0),
+                            share:  100,
+                          },
+                        },
+                      ],
+                    })
+                    setExportOpen(false)
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 text-left whitespace-nowrap border-b border-blue-100"
+                >
+                  <Download size={14} className="text-blue-500 shrink-0" /> Full Report (5 sheets)
+                </button>
+                {/* ── Separator ── */}
+                <div className="px-4 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50">Individual sheets</div>
                 <button
                   onClick={() => {
                     exportToExcel({
                       filename:      `sales-detailed-${dateFrom}-${dateTo}`,
-                      reportTitle:   'Detailed Sales Data',
+                      reportTitle:   'Detailed Sales Transactions',
                       locationLabel: exportLocationLabel,
                       dateFrom,
                       dateTo,
                       generatedBy:   user?.full_name ?? '',
                       sheets: [{
                         name:    'Detailed Sales',
+                        kpis: [
+                          { label: 'Total Revenue',   value: `FJD ${totalRevenue.toFixed(2)}` },
+                          { label: 'Transactions',    value: String(totalTx) },
+                          { label: 'Avg. Sale',       value: `FJD ${avgTx.toFixed(2)}` },
+                          { label: 'Total Discounts', value: `FJD ${totalDiscount.toFixed(2)}` },
+                        ],
                         columns: [
-                          { header: 'Date',           key: 'date',     width: 16 },
+                          { header: 'Date',           key: 'date',     width: 14 },
                           { header: 'Cashier',        key: 'cashier',  width: 22 },
                           { header: 'Payment Method', key: 'payment',  width: 20 },
                           { header: 'Subtotal',       key: 'subtotal', width: 14, type: 'currency' },
@@ -232,9 +377,9 @@ export default function ReportsPage() {
                     })
                     setExportOpen(false)
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
                 >
-                  <Download size={13} className="text-slate-400 shrink-0" /> Detailed Sales (Excel)
+                  <Download size={13} className="text-slate-400 shrink-0" /> Detailed Transactions
                 </button>
                 <button
                   onClick={() => {
@@ -246,31 +391,41 @@ export default function ReportsPage() {
                       dateTo,
                       generatedBy:   user?.full_name ?? '',
                       sheets: [{
-                        name:    'Summary',
+                        name:    'Performance Summary',
+                        kpis: [
+                          { label: 'Gross Sales',  value: `FJD ${totalRevenue.toFixed(2)}` },
+                          { label: 'Net Sales',    value: `FJD ${netSales.toFixed(2)}` },
+                          { label: 'Gross Profit', value: totalCOGS > 0 ? `FJD ${grossProfit.toFixed(2)}` : '—' },
+                          { label: 'Transactions', value: String(totalTx) },
+                        ],
                         columns: [
-                          { header: 'Metric',       key: 'metric', width: 36 },
-                          { header: 'Value (FJD)',  key: 'value',  width: 20, align: 'right' },
+                          { header: 'Metric', key: 'metric', width: 38 },
+                          { header: 'Value',  key: 'value',  width: 22, align: 'right' },
                         ],
                         data: [
-                          { metric: 'Gross Sales (incl. tax)',  value: `FJD ${totalRevenue.toFixed(2)}` },
-                          { metric: 'Sales EX Tax',             value: `FJD ${totalExTax.toFixed(2)}` },
-                          { metric: 'Refunds',                  value: `FJD ${refundsTotal.toFixed(2)}` },
-                          { metric: 'Net Sales',                value: `FJD ${netSales.toFixed(2)}` },
-                          { metric: 'Total Discounts',          value: `FJD ${totalDiscount.toFixed(2)}` },
-                          { metric: 'Tax Collected',            value: `FJD ${totalTax.toFixed(2)}` },
-                          { metric: 'Cost of Goods Sold (COGS)',value: `FJD ${totalCOGS.toFixed(2)}` },
-                          { metric: 'Gross Profit',             value: `FJD ${grossProfit.toFixed(2)}` },
-                          { metric: 'Gross Margin %',           value: `${marginPct.toFixed(1)}%` },
-                          { metric: 'Total Transactions',       value: String(totalTx) },
-                          { metric: 'Average Sale Value',       value: `FJD ${avgTx.toFixed(2)}` },
+                          { _section: true, metric: '◆  REVENUE' },
+                          { metric: 'Gross Sales (incl. tax)',   value: `FJD ${totalRevenue.toFixed(2)}` },
+                          { metric: 'Sales EX Tax',              value: `FJD ${totalExTax.toFixed(2)}` },
+                          { metric: 'Refunds',                   value: `FJD ${refundsTotal.toFixed(2)}` },
+                          { metric: 'Net Sales',                 value: `FJD ${netSales.toFixed(2)}` },
+                          { _section: true, metric: '◆  PROFITABILITY' },
+                          { metric: 'Cost of Goods Sold (COGS)', value: totalCOGS > 0 ? `FJD ${totalCOGS.toFixed(2)}` : 'N/A' },
+                          { metric: 'Gross Profit',              value: totalCOGS > 0 ? `FJD ${grossProfit.toFixed(2)}` : 'N/A' },
+                          { metric: 'Gross Margin %',            value: totalCOGS > 0 ? `${marginPct.toFixed(1)}%` : 'N/A' },
+                          { _section: true, metric: '◆  DISCOUNTS & TAX' },
+                          { metric: 'Total Discounts',           value: `FJD ${totalDiscount.toFixed(2)}` },
+                          { metric: 'Tax Collected',             value: `FJD ${totalTax.toFixed(2)}` },
+                          { _section: true, metric: '◆  OPERATIONS' },
+                          { metric: 'Total Transactions',        value: String(totalTx) },
+                          { metric: 'Average Sale Value',        value: `FJD ${avgTx.toFixed(2)}` },
                         ],
                       }],
                     })
                     setExportOpen(false)
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
                 >
-                  <FileText size={13} className="text-slate-400 shrink-0" /> Performance Summary (Excel)
+                  <FileText size={13} className="text-slate-400 shrink-0" /> Performance Summary
                 </button>
               </div>
             )}
@@ -350,11 +505,17 @@ export default function ReportsPage() {
                 generatedBy:   user?.full_name ?? '',
                 sheets: [{
                   name:    'Top Products',
+                  kpis: [
+                    { label: 'Products Tracked', value: String(byProduct.length) },
+                    { label: 'Total Units Sold',  value: String(byProduct.reduce((s, p) => s + p.qty, 0)) },
+                    { label: 'Total Revenue',     value: `FJD ${byProduct.reduce((s, p) => s + p.total, 0).toFixed(2)}` },
+                    { label: 'Top Product',       value: byProduct[0]?.name ?? '—' },
+                  ],
                   columns: [
-                    { header: 'Rank',       key: 'rank',  width: 8,  type: 'integer', align: 'center' },
-                    { header: 'Product',    key: 'name',  width: 34 },
-                    { header: 'Qty Sold',   key: 'qty',   width: 14, type: 'integer' },
-                    { header: 'Revenue',    key: 'total', width: 16, type: 'currency' },
+                    { header: 'Rank',     key: 'rank',  width: 8,  type: 'integer', align: 'center' },
+                    { header: 'Product',  key: 'name',  width: 36 },
+                    { header: 'Qty Sold', key: 'qty',   width: 14, type: 'integer' },
+                    { header: 'Revenue',  key: 'total', width: 16, type: 'currency' },
                   ],
                   data: byProduct.map((p, i) => ({ rank: i + 1, name: p.name, qty: p.qty, total: p.total })),
                   totals: {
@@ -455,13 +616,19 @@ export default function ReportsPage() {
                 generatedBy:   user?.full_name ?? '',
                 sheets: [{
                   name:    'Staff Performance',
+                  kpis: [
+                    { label: 'Staff Members',    value: String(byStaff.length) },
+                    { label: 'Total Transactions',value: String(byStaff.reduce((s, r) => s + r.count, 0)) },
+                    { label: 'Total Revenue',    value: `FJD ${byStaff.reduce((s, r) => s + r.total, 0).toFixed(2)}` },
+                    { label: 'Top Performer',    value: byStaff[0]?.name ?? '—' },
+                  ],
                   columns: [
                     { header: 'Cashier',         key: 'name',     width: 26 },
-                    { header: 'Transactions',     key: 'count',    width: 16, type: 'integer' },
-                    { header: 'Discounts Given',  key: 'discount', width: 18, type: 'currency' },
-                    { header: 'Revenue',          key: 'total',    width: 16, type: 'currency' },
+                    { header: 'Transactions',    key: 'count',    width: 16, type: 'integer' },
+                    { header: 'Discounts Given', key: 'discount', width: 18, type: 'currency' },
+                    { header: 'Revenue',         key: 'total',    width: 16, type: 'currency' },
                   ],
-                  data: byStaff.map(s => ({ name: s.name, count: s.count, discount: s.discount, total: s.total })),
+                  data:   byStaff.map(s => ({ name: s.name, count: s.count, discount: s.discount, total: s.total })),
                   totals: {
                     name:     'TOTALS',
                     count:    byStaff.reduce((s, r) => s + r.count, 0),

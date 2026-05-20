@@ -106,6 +106,11 @@ export default function SalesPage() {
           : 'All Stores')
       : (user?.location?.name ?? 'Store')
 
+    const completed   = filtered.filter(s => s.status === 'completed')
+    const totalRev    = completed.reduce((sum, s) => sum + s.total, 0)
+    const totalDisc   = filtered.reduce((sum, s) => sum + s.discount_amount, 0)
+    const avgSale     = completed.length ? totalRev / completed.length : 0
+
     exportToExcel({
       filename:      `sales-${dateFrom}-to-${dateTo}`,
       reportTitle:   'Sales History Report',
@@ -114,7 +119,14 @@ export default function SalesPage() {
       dateTo,
       generatedBy:   user?.full_name ?? 'Unknown',
       sheets: [{
-        name:    'Sales History',
+        name:      'Sales History',
+        statusKey: 'status',
+        kpis: [
+          { label: 'Total Revenue',    value: `FJD ${totalRev.toFixed(2)}` },
+          { label: 'Transactions',     value: String(completed.length) },
+          { label: 'Avg. Sale Value',  value: `FJD ${avgSale.toFixed(2)}` },
+          { label: 'Total Discounts',  value: `FJD ${totalDisc.toFixed(2)}` },
+        ],
         columns: [
           { header: 'Receipt #',      key: 'receipt',  width: 14 },
           { header: 'Date & Time',    key: 'date',     width: 22 },
