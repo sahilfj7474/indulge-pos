@@ -8,6 +8,7 @@ import { getCategories, getActiveProducts, getProductByBarcode, searchProducts }
 import { completeSale, SplitPayment } from '@/lib/services/pos.service'
 import { getHeldOrders, saveHeldOrder, HeldOrderRecord } from '@/lib/services/held-orders.service'
 import { getSettings, getPaymentMethods, PaymentMethodConfig } from '@/lib/services/settings.service'
+import { getDefaultReceiptTemplate, ReceiptTemplate } from '@/lib/services/receipt-template.service'
 import { getActivePromotions, applyPromotions, Promotion } from '@/lib/services/promotions.service'
 import { getVariants, ProductVariant } from '@/lib/services/variants.service'
 import { calculateLoyaltyPoints } from '@/lib/utils'
@@ -39,6 +40,7 @@ export default function POSPage() {
   const [taxInclusive, setTaxInclusive] = useState(false)
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodConfig[]>([])
+  const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null)
 
   // Promotions
   const [promotions, setPromotions] = useState<Promotion[]>([])
@@ -70,7 +72,8 @@ export default function POSPage() {
       getSettings(),
       getActivePromotions(),
       getPaymentMethods(),
-    ]).then(([cats, prods, s, promos, methods]) => {
+      getDefaultReceiptTemplate(),
+    ]).then(([cats, prods, s, promos, methods, tmpl]) => {
       setCategories(cats)
       setProducts(prods)
       setSettings(s)
@@ -79,6 +82,7 @@ export default function POSPage() {
       setTaxInclusive(s.tax_inclusive === 'true')
       setPromotions(promos)
       setPaymentMethods(methods)
+      setReceiptTemplate(tmpl)
       setLoadingProducts(false)
     })
     loadHeldOrders()
@@ -378,6 +382,7 @@ export default function POSPage() {
           loyaltyPointsEarned={completedSale.pointsEarned}
           splitPayments={completedSale.splits}
           settings={settings}
+          template={receiptTemplate}
           taxRate={taxRate}
           taxInclusive={taxInclusive}
           onClose={handleReceiptClose}

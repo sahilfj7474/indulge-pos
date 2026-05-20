@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { Sale, CartItem, Customer, Location, User } from '@/types'
 import { SplitPayment } from '@/lib/services/pos.service'
+import { ReceiptTemplate } from '@/lib/services/receipt-template.service'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { X, Printer } from 'lucide-react'
 
@@ -18,6 +19,7 @@ interface Props {
   loyaltyPointsEarned: number
   splitPayments?: SplitPayment[]
   settings?: Record<string, string>
+  template?: ReceiptTemplate | null
   taxRate?: number
   taxInclusive?: boolean
   onClose: () => void
@@ -59,6 +61,7 @@ export default function Receipt({
   loyaltyPointsEarned,
   splitPayments,
   settings = {},
+  template,
   taxRate = 0.09,
   taxInclusive = false,
   onClose,
@@ -71,15 +74,31 @@ export default function Receipt({
     : 0
   const surcharge = (sale as any).surcharge_amount ?? 0
 
-  const storeName      = settings.store_name      || location.name
-  const businessAddr   = settings.business_address || location.address || ''
-  const businessPhone  = settings.business_phone   || location.phone   || ''
-  const businessEmail  = settings.business_email   || ''
+  // Template overrides settings, settings overrides defaults
+  const storeName      = template?.trading_name      || settings.store_name      || location.name
+  const businessAddr   = (template?.show_address     ?? true)  ? (settings.business_address || location.address || '') : ''
+  const businessPhone  = (template?.show_phone       ?? true)  ? (settings.business_phone   || location.phone   || '') : ''
+  const businessEmail  = (template?.show_email       ?? true)  ? (settings.business_email   || '') : ''
   const vatNumber      = settings.vat_number       || ''
-  const receiptHeader  = settings.receipt_header   || ''
-  const receiptFooter  = settings.receipt_footer   || 'Thank you for your purchase!'
-  const taxPct         = +(taxRate * 100).toFixed(4)
-  const taxLabel       = `${taxPct}% VAT`
+  const receiptHeader  = template?.header_text       ?? settings.receipt_header   ?? ''
+  const receiptFooter  = template?.footer_text       ?? settings.receipt_footer   ?? 'Thank you for your purchase!'
+  const receiptTitle   = template?.receipt_type_label ?? 'TAX INVOICE'
+  const numPrefix      = template?.number_prefix      ?? ''
+  const showSoldBy     = template?.show_sold_by       ?? true
+  const showBarcode    = template?.show_barcode        ?? false
+  const showLoyalty    = template?.show_loyalty_points ?? true
+  const hideDiscIfZero = template?.hide_discount_if_zero ?? true
+
+  const lItem     = template?.label_item     || 'ITEMS'
+  const lSubtotal = template?.label_subtotal || 'Subtotal'
+  const lDiscount = template?.label_discount || 'Discount'
+  const lTax      = template?.label_tax      || 'VAT'
+  const lTotal    = template?.label_total    || 'TOTAL'
+  const lChange   = template?.label_change   || 'Change'
+  const lCashier  = template?.label_cashier  || 'Cashier'
+
+  const taxPct  = +(taxRate * 100).toFixed(4)
+  const taxLabel = `${taxPct}% ${lTax}`
 
   // Convert to ex-tax amounts for display so receipt reads: Subtotal + VAT = Total
   const displayFactor      = taxInclusive ? 1 / (1 + taxRate) : 1
@@ -133,22 +152,22 @@ export default function Receipt({
               {receiptHeader && <p className="mt-0.5 italic">{receiptHeader}</p>}
             </div>
 
-            {/* ── TAX INVOICE title ── */}
+            {/* ── Receipt title ── */}
             <p>{HDIV}</p>
-            <p className="text-center font-bold tracking-widest">TAX INVOICE</p>
+            <p className="text-center font-bold tracking-widest">{receiptTitle}</p>
             <p>{HDIV}</p>
 
             {/* ── Transaction meta ── */}
             <div className="space-y-0.5 my-1">
               <Row label="Date:"     value={dateStr}   />
-              <Row label="Receipt#:" value={receiptNum} />
-              <Row label="Cashier:"  value={cashier.full_name} />
+              <Row label={`${numPrefix ? numPrefix + ':' : 'Receipt#:'}`} value={receiptNum} />
+              {showSoldBy && <Row label={`${lCashier}:`} value={cashier.full_name} />}
               {customer && <Row label="Customer:" value={customer.full_name} />}
             </div>
 
             {/* ── Items ── */}
             <p>{DIV}</p>
-            <p className="font-bold my-0.5">ITEMS</p>
+            <p className="font-bold my-0.5">{lItem}</p>
             <p>{DIV}</p>
 
             <div className="space-y-1.5 my-1">
@@ -175,9 +194,9 @@ export default function Receipt({
             {/* ── Totals ── */}
             <p>{DIV}</p>
             <div className="space-y-0.5 my-1">
-              <Row label="Subtotal" value={formatCurrency(displaySubtotal)} />
-              {displayDiscount > 0 && (
-                <Row label="Discount" value={`-${formatCurrency(displayDiscount)}`} />
+              <Row label={lSubtotal} value={formatCurrency(displaySubtotal)} />
+              {(displayDiscount > 0 || !hideDiscIfZero) && (
+                <Row label={lDiscount} value={displayDiscount > 0 ? `-${formatCurrency(displayDiscount)}` : formatCurrency(0)} />
               )}
               {loyaltyPointsRedeemed > 0 && (
                 <Row label="Points Redeemed" value={`-${formatCurrency(loyaltyPointsRedeemed)}`} />
@@ -189,7 +208,7 @@ export default function Receipt({
             </div>
             <p>{HDIV}</p>
             <div className="flex justify-between font-bold text-sm my-1 tracking-wide">
-              <span>{center('TOTAL').trimStart()}</span>
+              <span>{lTotal}</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
             <p>{HDIV}</p>
@@ -224,7 +243,7 @@ export default function Receipt({
                   {sale.payment_method === 'cash' && (
                     <>
                       <Row label="Tendered" value={formatCurrency(amountTendered)} />
-                      <Row label="Change"   value={formatCurrency(change)} bold />
+                      <Row label={lChange}  value={formatCurrency(change)} bold />
                     </>
                   )}
                 </>
@@ -232,7 +251,7 @@ export default function Receipt({
             </div>
 
             {/* ── Loyalty ── */}
-            {customer && (
+            {customer && showLoyalty && (
               <>
                 <p>{DIV}</p>
                 <div className="space-y-0.5 my-1">
