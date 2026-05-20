@@ -135,8 +135,18 @@ export async function updateUser(id: string, data: Partial<{
   location_id: string | null
   location_ids: string[] | null
   is_active: boolean
+  phone: string | null
+  max_discount_pct: number
+  permissions_override: Record<string, boolean> | null
 }>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('users').update(data).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  // Soft-delete: deactivate instead of hard-delete to preserve sale history
+  const supabase = createClient()
+  const { error } = await supabase.from('users').update({ is_active: false }).eq('id', id)
   if (error) throw new Error(error.message)
 }

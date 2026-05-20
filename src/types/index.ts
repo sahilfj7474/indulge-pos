@@ -27,6 +27,9 @@ export interface User {
   location?: Location
   location_ids: string[] | null   // null = all locations; [id1,id2] = specific locations
   is_active: boolean
+  phone: string | null
+  max_discount_pct: number        // max manual discount % this user can apply (0–100)
+  permissions_override: Record<string, boolean> | null  // null = use role defaults
   created_at: string
 }
 

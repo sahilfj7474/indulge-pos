@@ -7,6 +7,127 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   admin: 4,
 }
 
+// ─── Granular permission tree ──────────────────────────────────────────────────
+
+export interface PermNode {
+  label: string
+  description?: string
+}
+
+export interface PermGroup {
+  label: string
+  icon?: string
+  children: Record<string, PermNode>
+}
+
+export const PERMISSION_TREE: Record<string, PermGroup> = {
+  pos: {
+    label: 'Point of Sale',
+    children: {
+      process_sale:    { label: 'Process sales' },
+      apply_discount:  { label: 'Apply discounts to transactions' },
+      void_sale:       { label: 'Void & refund sales' },
+      view_sales:      { label: 'View sales history' },
+      manage_register: { label: 'Open & close register (X/Z reports)' },
+    },
+  },
+  products: {
+    label: 'Products',
+    children: {
+      view:            { label: 'View products & catalog' },
+      create:          { label: 'Create new products' },
+      edit:            { label: 'Edit existing products' },
+      delete:          { label: 'Delete products' },
+      manage_pricing:  { label: 'Manage pricing, margin & costs' },
+      view_cost:       { label: 'View cost prices' },
+    },
+  },
+  inventory: {
+    label: 'Inventory',
+    children: {
+      view:   { label: 'View inventory levels' },
+      adjust: { label: 'Adjust & transfer stock' },
+    },
+  },
+  customers: {
+    label: 'Customers',
+    children: {
+      view:   { label: 'View customer list & profiles' },
+      create: { label: 'Create & edit customers' },
+      delete: { label: 'Delete customers' },
+    },
+  },
+  reports: {
+    label: 'Reports & Analytics',
+    children: {
+      view:   { label: 'View reports & dashboard' },
+      export: { label: 'Export data to CSV' },
+      zx:     { label: 'Print X & Z end-of-day reports' },
+    },
+  },
+  admin: {
+    label: 'Administration',
+    children: {
+      users:     { label: 'Manage users & permissions' },
+      locations: { label: 'Manage locations / outlets' },
+      settings:  { label: 'System settings & receipt template' },
+      groups:    { label: 'Customer groups & promotions' },
+    },
+  },
+}
+
+export type PermMap = Record<string, boolean>
+
+export const ROLE_PERMISSION_DEFAULTS: Record<UserRole, PermMap> = {
+  cashier: {
+    'pos.process_sale': true,  'pos.apply_discount': true,
+    'pos.void_sale': false,    'pos.view_sales': true,    'pos.manage_register': false,
+    'products.view': false,    'products.create': false,  'products.edit': false,
+    'products.delete': false,  'products.manage_pricing': false, 'products.view_cost': false,
+    'inventory.view': false,   'inventory.adjust': false,
+    'customers.view': true,    'customers.create': true,  'customers.delete': false,
+    'reports.view': false,     'reports.export': false,   'reports.zx': false,
+    'admin.users': false,      'admin.locations': false,  'admin.settings': false, 'admin.groups': false,
+  },
+  supervisor: {
+    'pos.process_sale': true,  'pos.apply_discount': true,
+    'pos.void_sale': true,     'pos.view_sales': true,    'pos.manage_register': true,
+    'products.view': false,    'products.create': false,  'products.edit': false,
+    'products.delete': false,  'products.manage_pricing': false, 'products.view_cost': false,
+    'inventory.view': true,    'inventory.adjust': true,
+    'customers.view': true,    'customers.create': true,  'customers.delete': false,
+    'reports.view': true,      'reports.export': true,    'reports.zx': true,
+    'admin.users': false,      'admin.locations': false,  'admin.settings': false, 'admin.groups': false,
+  },
+  manager: {
+    'pos.process_sale': true,  'pos.apply_discount': true,
+    'pos.void_sale': true,     'pos.view_sales': true,    'pos.manage_register': true,
+    'products.view': true,     'products.create': true,   'products.edit': true,
+    'products.delete': true,   'products.manage_pricing': true, 'products.view_cost': true,
+    'inventory.view': true,    'inventory.adjust': true,
+    'customers.view': true,    'customers.create': true,  'customers.delete': false,
+    'reports.view': true,      'reports.export': true,    'reports.zx': true,
+    'admin.users': false,      'admin.locations': false,  'admin.settings': true, 'admin.groups': true,
+  },
+  admin: {
+    'pos.process_sale': true,  'pos.apply_discount': true,
+    'pos.void_sale': true,     'pos.view_sales': true,    'pos.manage_register': true,
+    'products.view': true,     'products.create': true,   'products.edit': true,
+    'products.delete': true,   'products.manage_pricing': true, 'products.view_cost': true,
+    'inventory.view': true,    'inventory.adjust': true,
+    'customers.view': true,    'customers.create': true,  'customers.delete': true,
+    'reports.view': true,      'reports.export': true,    'reports.zx': true,
+    'admin.users': true,       'admin.locations': true,   'admin.settings': true, 'admin.groups': true,
+  },
+}
+
+/** Returns resolved permissions: override takes precedence, then role defaults */
+export function resolvePermissions(role: UserRole, override: PermMap | null): PermMap {
+  const defaults = ROLE_PERMISSION_DEFAULTS[role] ?? {}
+  if (!override) return defaults
+  return { ...defaults, ...override }
+}
+
 export function hasRole(userRole: UserRole, requiredRole: UserRole): boolean {
   return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
 }
