@@ -6,7 +6,8 @@ import { Product, Category, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getAllProducts, getCategories, getLocations, deleteProduct, updateProduct } from '@/lib/services/admin.service'
 import { getInventoryStockMap, getAllInventoryStockMap } from '@/lib/services/inventory.service'
-import { formatCurrency, formatDateTime, exportToCSV, cn } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, localToday } from '@/lib/utils'
+import { exportToExcel } from '@/lib/utils/excel'
 import ProductModal from '@/components/products/ProductModal'
 import CategoryModal from '@/components/products/CategoryModal'
 import BarcodeLabelModal from '@/components/products/BarcodeLabelModal'
@@ -114,17 +115,42 @@ export default function ProductsPage() {
   }
 
   function handleExport() {
-    exportToCSV(filtered.map(p => ({
-      'Name':      p.name,
-      'SKU':       p.sku ?? '',
-      'Barcode':   p.barcode ?? '',
-      'Category':  p.category?.name ?? '',
-      'Price':     p.price,
-      'Cost':      p.cost ?? '',
-      'Stock':     stockMap.get(p.id) ?? 0,
-      'Status':    p.is_active ? 'Active' : 'Inactive',
-      'Created':   formatDateTime(p.created_at),
-    })), 'products-export')
+    const today = localToday()
+    exportToExcel({
+      filename:      'products-catalog',
+      reportTitle:   'Product Catalog',
+      locationLabel: 'All Locations',
+      dateFrom:      today,
+      dateTo:        today,
+      generatedBy:   user?.full_name ?? 'Unknown',
+      sheets: [{
+        name:    'Products',
+        columns: [
+          { header: '#',          key: 'num',      width: 6,  type: 'integer', align: 'center' },
+          { header: 'Name',       key: 'name',     width: 30 },
+          { header: 'SKU',        key: 'sku',      width: 16 },
+          { header: 'Barcode',    key: 'barcode',  width: 18 },
+          { header: 'Category',   key: 'category', width: 20 },
+          { header: 'Price (FJD)',key: 'price',    width: 14, type: 'currency' },
+          { header: 'Cost (FJD)', key: 'cost',     width: 14, type: 'currency' },
+          { header: 'Stock',      key: 'stock',    width: 10, type: 'integer' },
+          { header: 'Status',     key: 'status',   width: 12, align: 'center' },
+          { header: 'Created',    key: 'created',  width: 22 },
+        ],
+        data: filtered.map((p, i) => ({
+          num:      i + 1,
+          name:     p.name,
+          sku:      p.sku ?? '',
+          barcode:  p.barcode ?? '',
+          category: p.category?.name ?? 'Uncategorised',
+          price:    p.price,
+          cost:     p.cost ?? 0,
+          stock:    stockMap.get(p.id) ?? 0,
+          status:   p.is_active ? 'Active' : 'Inactive',
+          created:  formatDateTime(p.created_at),
+        })),
+      }],
+    })
   }
 
   return (
@@ -139,7 +165,7 @@ export default function ProductsPage() {
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
           >
-            <Download size={14} /> Export CSV
+            <Download size={14} /> Export Excel
           </button>
           {tab === 'categories' ? (
             <button

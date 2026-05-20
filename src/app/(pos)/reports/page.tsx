@@ -9,7 +9,8 @@ import {
 } from '@/lib/services/reports.service'
 import { getLocations } from '@/lib/services/admin.service'
 import { Location } from '@/types'
-import { formatCurrency, exportToCSV, cn, localToday } from '@/lib/utils'
+import { formatCurrency, cn, localToday } from '@/lib/utils'
+import { exportToExcel } from '@/lib/utils/excel'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import MultiLocationPicker from '@/components/ui/MultiLocationPicker'
 import ZReportModal from '@/components/reports/ZReportModal'
@@ -140,6 +141,13 @@ export default function ReportsPage() {
     ? buildZReportData(sales, zLocationLabel, dateFrom === dateTo ? dateFrom : `${dateFrom} to ${dateTo}`, user.full_name)
     : null
 
+  // Full location label for Excel exports (lists all names when multi-selected)
+  const exportLocationLabel = effectiveLocationIds.length === 0
+    ? 'All Stores'
+    : effectiveLocationIds.length === 1
+    ? (locations.find(l => l.id === effectiveLocationIds[0])?.name ?? user?.location?.name ?? 'Store')
+    : effectiveLocationIds.map(id => locations.find(l => l.id === id)?.name ?? id).join(', ')
+
   const MetricCard = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
     <div className="bg-white border border-blue-100 rounded-xl p-4">
       <p className="text-sm text-slate-500">{label}</p>
@@ -186,40 +194,83 @@ export default function ReportsPage() {
               >
                 <button
                   onClick={() => {
-                    exportToCSV(sales.map(s => ({
-                      Date: s.created_at.slice(0, 10),
-                      'Payment Method': s.payment_method,
-                      Subtotal: s.subtotal,
-                      Discount: s.discount_amount,
-                      Tax: s.tax_amount,
-                      Total: s.total,
-                    })), `sales-detailed-${dateFrom}-${dateTo}`)
+                    exportToExcel({
+                      filename:      `sales-detailed-${dateFrom}-${dateTo}`,
+                      reportTitle:   'Detailed Sales Data',
+                      locationLabel: exportLocationLabel,
+                      dateFrom,
+                      dateTo,
+                      generatedBy:   user?.full_name ?? '',
+                      sheets: [{
+                        name:    'Detailed Sales',
+                        columns: [
+                          { header: 'Date',           key: 'date',     width: 16 },
+                          { header: 'Cashier',        key: 'cashier',  width: 22 },
+                          { header: 'Payment Method', key: 'payment',  width: 20 },
+                          { header: 'Subtotal',       key: 'subtotal', width: 14, type: 'currency' },
+                          { header: 'Discount',       key: 'discount', width: 14, type: 'currency' },
+                          { header: 'Tax',            key: 'tax',      width: 12, type: 'currency' },
+                          { header: 'Total',          key: 'total',    width: 14, type: 'currency' },
+                        ],
+                        data: sales.map(s => ({
+                          date:     s.created_at.slice(0, 10),
+                          cashier:  s.user?.full_name ?? '',
+                          payment:  s.payment_method.replace(/_/g, ' '),
+                          subtotal: s.subtotal,
+                          discount: s.discount_amount,
+                          tax:      s.tax_amount,
+                          total:    s.total,
+                        })),
+                        totals: {
+                          date:     'TOTALS',
+                          subtotal: sales.reduce((sum, s) => sum + s.subtotal, 0),
+                          discount: sales.reduce((sum, s) => sum + s.discount_amount, 0),
+                          tax:      sales.reduce((sum, s) => sum + s.tax_amount, 0),
+                          total:    sales.reduce((sum, s) => sum + s.total, 0),
+                        },
+                      }],
+                    })
                     setExportOpen(false)
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
                 >
-                  <Download size={13} className="text-slate-400 shrink-0" /> Detailed (CSV)
+                  <Download size={13} className="text-slate-400 shrink-0" /> Detailed Sales (Excel)
                 </button>
                 <button
                   onClick={() => {
-                    exportToCSV([
-                      { Metric: 'Gross Sales (incl. tax)', Value: totalRevenue.toFixed(2) },
-                      { Metric: 'Sales EX Tax',            Value: totalExTax.toFixed(2) },
-                      { Metric: 'Refunds',                 Value: refundsTotal.toFixed(2) },
-                      { Metric: 'Net Sales',               Value: netSales.toFixed(2) },
-                      { Metric: 'Discounts',               Value: totalDiscount.toFixed(2) },
-                      { Metric: 'Tax Collected',           Value: totalTax.toFixed(2) },
-                      { Metric: 'COGS',                    Value: totalCOGS.toFixed(2) },
-                      { Metric: 'Gross Profit',            Value: grossProfit.toFixed(2) },
-                      { Metric: 'Margin %',                Value: marginPct.toFixed(1) },
-                      { Metric: 'Transactions',            Value: String(totalTx) },
-                      { Metric: 'Avg. Sale',               Value: avgTx.toFixed(2) },
-                    ], `sales-summary-${dateFrom}-${dateTo}`)
+                    exportToExcel({
+                      filename:      `sales-summary-${dateFrom}-${dateTo}`,
+                      reportTitle:   'Sales Performance Summary',
+                      locationLabel: exportLocationLabel,
+                      dateFrom,
+                      dateTo,
+                      generatedBy:   user?.full_name ?? '',
+                      sheets: [{
+                        name:    'Summary',
+                        columns: [
+                          { header: 'Metric',       key: 'metric', width: 36 },
+                          { header: 'Value (FJD)',  key: 'value',  width: 20, align: 'right' },
+                        ],
+                        data: [
+                          { metric: 'Gross Sales (incl. tax)',  value: `FJD ${totalRevenue.toFixed(2)}` },
+                          { metric: 'Sales EX Tax',             value: `FJD ${totalExTax.toFixed(2)}` },
+                          { metric: 'Refunds',                  value: `FJD ${refundsTotal.toFixed(2)}` },
+                          { metric: 'Net Sales',                value: `FJD ${netSales.toFixed(2)}` },
+                          { metric: 'Total Discounts',          value: `FJD ${totalDiscount.toFixed(2)}` },
+                          { metric: 'Tax Collected',            value: `FJD ${totalTax.toFixed(2)}` },
+                          { metric: 'Cost of Goods Sold (COGS)',value: `FJD ${totalCOGS.toFixed(2)}` },
+                          { metric: 'Gross Profit',             value: `FJD ${grossProfit.toFixed(2)}` },
+                          { metric: 'Gross Margin %',           value: `${marginPct.toFixed(1)}%` },
+                          { metric: 'Total Transactions',       value: String(totalTx) },
+                          { metric: 'Average Sale Value',       value: `FJD ${avgTx.toFixed(2)}` },
+                        ],
+                      }],
+                    })
                     setExportOpen(false)
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 text-left whitespace-nowrap"
                 >
-                  <FileText size={13} className="text-slate-400 shrink-0" /> Summary (CSV)
+                  <FileText size={13} className="text-slate-400 shrink-0" /> Performance Summary (Excel)
                 </button>
               </div>
             )}
@@ -289,9 +340,32 @@ export default function ReportsPage() {
       {tab === 'products' && (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <button onClick={() => exportToCSV(byProduct.map(p => ({ Product: p.name, 'Qty Sold': p.qty, Total: p.total })), 'top-products')}
+            <button
+              onClick={() => exportToExcel({
+                filename:      `top-products-${dateFrom}-${dateTo}`,
+                reportTitle:   'Top Products by Revenue',
+                locationLabel: exportLocationLabel,
+                dateFrom,
+                dateTo,
+                generatedBy:   user?.full_name ?? '',
+                sheets: [{
+                  name:    'Top Products',
+                  columns: [
+                    { header: 'Rank',       key: 'rank',  width: 8,  type: 'integer', align: 'center' },
+                    { header: 'Product',    key: 'name',  width: 34 },
+                    { header: 'Qty Sold',   key: 'qty',   width: 14, type: 'integer' },
+                    { header: 'Revenue',    key: 'total', width: 16, type: 'currency' },
+                  ],
+                  data: byProduct.map((p, i) => ({ rank: i + 1, name: p.name, qty: p.qty, total: p.total })),
+                  totals: {
+                    name:  'TOTAL',
+                    qty:   byProduct.reduce((s, p) => s + p.qty, 0),
+                    total: byProduct.reduce((s, p) => s + p.total, 0),
+                  },
+                }],
+              })}
               className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm rounded-lg">
-              <Download size={13} /> Export
+              <Download size={13} /> Export Excel
             </button>
           </div>
           {byProduct.length > 0 ? (
@@ -371,9 +445,33 @@ export default function ReportsPage() {
       {tab === 'staff' && (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <button onClick={() => exportToCSV(byStaff.map(s => ({ Staff: s.name, Transactions: s.count, Revenue: s.total, Discounts: s.discount })), 'sales-by-staff')}
+            <button
+              onClick={() => exportToExcel({
+                filename:      `staff-performance-${dateFrom}-${dateTo}`,
+                reportTitle:   'Staff Sales Performance',
+                locationLabel: exportLocationLabel,
+                dateFrom,
+                dateTo,
+                generatedBy:   user?.full_name ?? '',
+                sheets: [{
+                  name:    'Staff Performance',
+                  columns: [
+                    { header: 'Cashier',         key: 'name',     width: 26 },
+                    { header: 'Transactions',     key: 'count',    width: 16, type: 'integer' },
+                    { header: 'Discounts Given',  key: 'discount', width: 18, type: 'currency' },
+                    { header: 'Revenue',          key: 'total',    width: 16, type: 'currency' },
+                  ],
+                  data: byStaff.map(s => ({ name: s.name, count: s.count, discount: s.discount, total: s.total })),
+                  totals: {
+                    name:     'TOTALS',
+                    count:    byStaff.reduce((s, r) => s + r.count, 0),
+                    discount: byStaff.reduce((s, r) => s + r.discount, 0),
+                    total:    byStaff.reduce((s, r) => s + r.total, 0),
+                  },
+                }],
+              })}
               className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm rounded-lg">
-              <Download size={13} /> Export
+              <Download size={13} /> Export Excel
             </button>
           </div>
           {byStaff.length > 0 ? (

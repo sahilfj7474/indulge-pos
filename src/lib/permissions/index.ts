@@ -61,7 +61,7 @@ export const PERMISSION_TREE: Record<string, PermGroup> = {
     label: 'Reports & Analytics',
     children: {
       view:   { label: 'View reports & dashboard' },
-      export: { label: 'Export data to CSV' },
+      export: { label: 'Export data to Excel' },
       zx:     { label: 'Print X & Z end-of-day reports' },
     },
   },

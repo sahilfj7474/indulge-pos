@@ -5,7 +5,8 @@ import { Sale, Location } from '@/types'
 import { useAuth } from '@/lib/auth/context'
 import { getSales, getSaleById } from '@/lib/services/sales.service'
 import { getLocations } from '@/lib/services/admin.service'
-import { formatCurrency, formatDateTime, cn, exportToCSV, localToday, localDayStart, localDayEnd } from '@/lib/utils'
+import { formatCurrency, formatDateTime, cn, localToday, localDayStart, localDayEnd } from '@/lib/utils'
+import { exportToExcel } from '@/lib/utils/excel'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import LocationPicker from '@/components/ui/LocationPicker'
 import SaleDetailModal from '@/components/sales/SaleDetailModal'
@@ -99,18 +100,54 @@ export default function SalesPage() {
   }
 
   function handleExport() {
-    exportToCSV(filtered.map(s => ({
-      'Receipt #':  s.id.slice(0, 8).toUpperCase(),
-      'Date':       formatDateTime(s.created_at),
-      'Cashier':    (s.user as unknown as { full_name: string })?.full_name ?? '',
-      'Customer':   (s.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in',
-      'Payment':    s.payment_method,
-      'Subtotal':   s.subtotal,
-      'Discount':   s.discount_amount,
-      'Tax':        s.tax_amount,
-      'Total':      s.total,
-      'Status':     s.status,
-    })), `sales-${dateFrom}-to-${dateTo}`)
+    const locationLabel = isManager
+      ? (selectedLocationId
+          ? (locations.find(l => l.id === selectedLocationId)?.name ?? 'Store')
+          : 'All Stores')
+      : (user?.location?.name ?? 'Store')
+
+    exportToExcel({
+      filename:      `sales-${dateFrom}-to-${dateTo}`,
+      reportTitle:   'Sales History Report',
+      locationLabel,
+      dateFrom,
+      dateTo,
+      generatedBy:   user?.full_name ?? 'Unknown',
+      sheets: [{
+        name:    'Sales History',
+        columns: [
+          { header: 'Receipt #',      key: 'receipt',  width: 14 },
+          { header: 'Date & Time',    key: 'date',     width: 22 },
+          { header: 'Cashier',        key: 'cashier',  width: 22 },
+          { header: 'Customer',       key: 'customer', width: 24 },
+          { header: 'Payment Method', key: 'payment',  width: 18 },
+          { header: 'Subtotal',       key: 'subtotal', width: 14, type: 'currency' },
+          { header: 'Discount',       key: 'discount', width: 14, type: 'currency' },
+          { header: 'Tax',            key: 'tax',      width: 12, type: 'currency' },
+          { header: 'Total',          key: 'total',    width: 14, type: 'currency' },
+          { header: 'Status',         key: 'status',   width: 16, align: 'center' },
+        ],
+        data: filtered.map(s => ({
+          receipt:  s.id.slice(0, 8).toUpperCase(),
+          date:     formatDateTime(s.created_at),
+          cashier:  (s.user    as unknown as { full_name: string })?.full_name ?? '',
+          customer: (s.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in',
+          payment:  s.payment_method.replace(/_/g, ' '),
+          subtotal: s.subtotal,
+          discount: s.discount_amount,
+          tax:      s.tax_amount,
+          total:    s.total,
+          status:   s.status.replace(/_/g, ' '),
+        })),
+        totals: {
+          receipt:  'TOTALS',
+          subtotal: filtered.reduce((sum, s) => sum + s.subtotal, 0),
+          discount: filtered.reduce((sum, s) => sum + s.discount_amount, 0),
+          tax:      filtered.reduce((sum, s) => sum + s.tax_amount, 0),
+          total:    filtered.reduce((sum, s) => sum + s.total, 0),
+        },
+      }],
+    })
   }
 
   return (
@@ -139,7 +176,7 @@ export default function SalesPage() {
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-slate-600 text-sm font-medium rounded-lg transition-colors"
           >
-            <Download size={14} /> Export CSV
+            <Download size={14} /> Export Excel
           </button>
         </div>
       </div>
