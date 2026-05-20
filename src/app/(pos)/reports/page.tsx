@@ -130,12 +130,12 @@ export default function ReportsPage() {
   const marginPct       = totalExTax > 0 ? (grossProfit / totalExTax) * 100 : 0
   const netSales        = totalRevenue - refundsTotal
 
+  // Used for the Z-report tab preview panel
   const zLocationLabel = effectiveLocationIds.length === 0
     ? 'All Stores'
     : effectiveLocationIds.length === 1
     ? (locations.find(l => l.id === effectiveLocationIds[0])?.name ?? user?.location?.name ?? 'Store')
     : `${effectiveLocationIds.length} Stores`
-
   const zData = user
     ? buildZReportData(sales, zLocationLabel, dateFrom === dateTo ? dateFrom : `${dateFrom} to ${dateTo}`, user.full_name)
     : null
@@ -505,8 +505,16 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {zType && zData && (
-        <ZReportModal data={zData} type={zType} onClose={() => setZType(null)} />
+      {zType && (
+        <ZReportModal
+          type={zType}
+          locations={locations}
+          initialSelectedIds={effectiveLocationIds}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          cashierName={user?.full_name ?? ''}
+          onClose={() => setZType(null)}
+        />
       )}
     </div>
   )

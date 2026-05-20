@@ -286,12 +286,21 @@ export default function Receipt({
           .receipt-print {
             display: block !important;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 11px;
-            line-height: 1.4;
-            color: #000;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.45;
+            color: #000 !important;
             background: #fff;
             width: 100%;
             padding: 4px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .receipt-print * {
+            color: #000 !important;
+          }
+          .receipt-print hr {
+            border-color: #000 !important;
           }
         }
       `}</style>

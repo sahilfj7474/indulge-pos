@@ -1,10 +1,12 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { Sale } from '@/types'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { voidSale, updateSaleNotes } from '@/lib/services/sales.service'
+import { getDefaultReceiptTemplate, ReceiptTemplate } from '@/lib/services/receipt-template.service'
+import { getSettings } from '@/lib/services/settings.service'
 import RefundModal from './RefundModal'
 import { Printer, Ban, RotateCcw, X, ChevronLeft, ChevronRight, Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -47,9 +49,18 @@ export default function SaleDetailModal({
 }: Props) {
   const receiptRef  = useRef<HTMLDivElement>(null)
   const handlePrint = useReactToPrint({ contentRef: receiptRef })
-  const [showRefund, setShowRefund] = useState(false)
-  const [notes,      setNotes]      = useState(sale.notes ?? '')
-  const [savingNotes, setSavingNotes] = useState(false)
+  const [showRefund,   setShowRefund]   = useState(false)
+  const [notes,        setNotes]        = useState(sale.notes ?? '')
+  const [savingNotes,  setSavingNotes]  = useState(false)
+  const [template,     setTemplate]     = useState<ReceiptTemplate | null>(null)
+  const [settings,     setPrintSettings] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    Promise.all([getDefaultReceiptTemplate(), getSettings()]).then(([tmpl, s]) => {
+      setTemplate(tmpl)
+      setPrintSettings(s)
+    })
+  }, [])
 
   const surcharge      = (sale as any).surcharge_amount ?? 0
   const paymentDetails = (sale as any).payment_details
@@ -363,45 +374,122 @@ export default function SaleDetailModal({
         </div>
       </div>
 
-      {/* Hidden print area */}
+      {/* Hidden print area — uses receipt template */}
       <div className="hidden">
-        <div ref={receiptRef} className="receipt-print bg-white text-black p-4 font-mono text-xs">
-          <div className="text-center mb-3">
-            <p className="text-base font-bold">{locationName}</p>
-            <p>{'='.repeat(36)}</p>
+        <div ref={receiptRef} className="receipt-print bg-white text-black font-mono text-[11px] leading-snug mx-auto" style={{ width: '100%', maxWidth: 320 }}>
+
+          {/* Header */}
+          <div className="text-center mb-1">
+            {(template == null || template.show_logo) && (
+              <img src="/logo-black.png" alt="Indulge" className="h-12 w-auto mx-auto mb-1 object-contain" />
+            )}
+            <p className="font-bold text-sm tracking-wide">
+              {(template?.trading_name || settings.store_name || locationName).toUpperCase()}
+            </p>
+            {(template?.show_address ?? true) && settings.business_address && <p>{settings.business_address}</p>}
+            {(template?.show_phone   ?? true) && settings.business_phone   && <p>Tel: {settings.business_phone}</p>}
+            {(template?.show_email   ?? true) && settings.business_email   && <p>{settings.business_email}</p>}
+            {template?.header_text && <p className="italic mt-0.5">{template.header_text}</p>}
           </div>
-          <p>{formatDateTime(sale.created_at)}</p>
-          <p>Receipt: {sale.id.slice(0, 8).toUpperCase()}</p>
-          <p>Cashier: {cashierName}</p>
-          <p>Customer: {customerName ?? 'Walk-in'}</p>
-          <p>{'='.repeat(36)}</p>
-          {(sale.items ?? []).map(item => {
-            const prod = item.product as unknown as { name: string }
-            return (
-              <div key={item.id}>
-                <p>{prod?.name}</p>
-                <div className="flex justify-between pl-2">
-                  <span>{item.quantity} × {formatCurrency(item.unit_price)}</span>
-                  <span>{formatCurrency(item.total)}</span>
-                </div>
-              </div>
-            )
-          })}
-          <p>{'='.repeat(36)}</p>
-          {sale.discount_amount > 0 && (
+
+          {/* Title */}
+          <div className="border-0 border-t-2 border-black my-0.5 w-full" />
+          <p className="text-center font-bold tracking-widest">
+            {template?.receipt_type_label || 'TAX INVOICE/RECEIPT'}
+          </p>
+          <div className="border-0 border-t-2 border-black my-0.5 w-full" />
+
+          {/* Meta */}
+          <div className="space-y-0.5 my-1">
+            <div className="flex justify-between"><span>Date:</span><span>{formatDateTime(sale.created_at)}</span></div>
             <div className="flex justify-between">
-              <span>Discount</span><span>-{formatCurrency(sale.discount_amount)}</span>
+              <span>{template?.number_prefix ? `${template.number_prefix}:` : 'Receipt#:'}</span>
+              <span>{sale.id.slice(0, 8).toUpperCase()}</span>
             </div>
-          )}
-          <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(sale.subtotal)}</span></div>
-          <div className="flex justify-between"><span>Tax</span><span>{formatCurrency(sale.tax_amount)}</span></div>
-          {surcharge > 0 && (
-            <div className="flex justify-between"><span>Surcharge</span><span>+{formatCurrency(surcharge)}</span></div>
-          )}
-          <div className="flex justify-between font-bold"><span>TOTAL</span><span>{formatCurrency(sale.total)}</span></div>
-          <p>{'='.repeat(36)}</p>
-          <p>Payment: {METHOD_LABEL[sale.payment_method] ?? sale.payment_method}</p>
-          <p className="text-center mt-2">Thank you!</p>
+            {(template?.show_sold_by ?? true) && (
+              <div className="flex justify-between">
+                <span>{template?.label_cashier || 'Served by'}:</span>
+                <span>{cashierName}</span>
+              </div>
+            )}
+            {customerName && (
+              <div className="flex justify-between"><span>Customer:</span><span>{customerName}</span></div>
+            )}
+          </div>
+
+          {/* Items header */}
+          <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
+          <div className="flex justify-between font-bold my-0.5">
+            <span>{template?.label_item  || 'Item'}</span>
+            <span>{template?.label_price || 'Price'}</span>
+          </div>
+          <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
+
+          {/* Items */}
+          <div className="space-y-1 my-1">
+            {(sale.items ?? []).map(item => {
+              const prod = item.product as unknown as { name: string }
+              return (
+                <div key={item.id}>
+                  <p className="font-semibold truncate">{prod?.name}</p>
+                  <div className="flex justify-between pl-2">
+                    <span>{item.quantity} × {formatCurrency(item.unit_price)}</span>
+                    <span>{formatCurrency(item.total)}</span>
+                  </div>
+                  {item.discount_amount > 0 && (
+                    <p className="pl-2">Disc: -{formatCurrency(item.discount_amount)}</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Totals */}
+          <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
+          <div className="space-y-0.5 my-1">
+            <div className="flex justify-between"><span>{template?.label_subtotal || 'Subtotal'}</span><span>{formatCurrency(sale.subtotal)}</span></div>
+            {sale.discount_amount > 0 && (
+              <div className="flex justify-between"><span>{template?.label_discount || 'Discount'}</span><span>-{formatCurrency(sale.discount_amount)}</span></div>
+            )}
+            <div className="flex justify-between"><span>{template?.label_tax || 'VAT'}</span><span>{formatCurrency(sale.tax_amount)}</span></div>
+            {surcharge > 0 && (
+              <div className="flex justify-between"><span>Surcharge</span><span>+{formatCurrency(surcharge)}</span></div>
+            )}
+          </div>
+          <div className="border-0 border-t-2 border-black my-0.5 w-full" />
+          <div className="flex justify-between font-bold text-sm my-1 tracking-wide">
+            <span>{template?.label_total || 'TOTAL'}</span>
+            <span>{formatCurrency(sale.total)}</span>
+          </div>
+          <div className="border-0 border-t-2 border-black my-0.5 w-full" />
+
+          {/* Payment */}
+          <div className="space-y-0.5 my-1">
+            {splitPayments.length > 0 ? (
+              <>
+                <p className="font-semibold">SPLIT PAYMENT:</p>
+                {splitPayments.map((sp, i) => (
+                  <div key={i} className="flex justify-between pl-2">
+                    <span>{sp.method.replace(/_/g, ' ').toUpperCase()}</span>
+                    <span>{formatCurrency(sp.amount)}</span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="flex justify-between">
+                <span>Payment Method</span>
+                <span>{sale.payment_method.replace(/_/g, ' ').toUpperCase()}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
+          <div className="text-center my-1 space-y-0.5">
+            <p className="font-bold">* {template?.footer_text || 'Thank you for your purchase!'} *</p>
+            <p>Please visit us again!</p>
+          </div>
+          <div className="border-0 border-t border-dashed border-black my-0.5 w-full" />
         </div>
       </div>
     </div>
