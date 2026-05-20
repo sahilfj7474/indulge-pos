@@ -144,7 +144,9 @@ export default function SalesPage() {
           date:     formatDateTime(s.created_at),
           cashier:  (s.user    as unknown as { full_name: string })?.full_name ?? '',
           customer: (s.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in',
-          payment:  s.payment_method.replace(/_/g, ' '),
+          payment:  s.payment_method === 'split' && (s as unknown as { payment_details?: { splits?: { method: string; amount: number }[] } }).payment_details?.splits?.length
+            ? (s as unknown as { payment_details: { splits: { method: string; amount: number }[] } }).payment_details.splits.map(sp => `${sp.method.replace(/_/g, ' ')} $${sp.amount.toFixed(2)}`).join(' + ')
+            : s.payment_method.replace(/_/g, ' '),
           subtotal: s.subtotal,
           discount: s.discount_amount,
           tax:      s.tax_amount,
@@ -262,8 +264,10 @@ export default function SalesPage() {
                 <td className="px-4 py-3 text-slate-600">
                   {(sale.customer as unknown as { full_name: string })?.full_name ?? 'Walk-in'}
                 </td>
-                <td className="px-4 py-3 text-slate-500 capitalize">
-                  {sale.payment_method.replace('_', ' ')}
+                <td className="px-4 py-3 text-slate-500 capitalize text-xs">
+                  {sale.payment_method === 'split' && (sale as unknown as { payment_details?: { splits?: { method: string; amount: number }[] } }).payment_details?.splits?.length
+                    ? (sale as unknown as { payment_details: { splits: { method: string; amount: number }[] } }).payment_details.splits.map(sp => `${sp.method.replace(/_/g, ' ')} $${sp.amount.toFixed(2)}`).join(' · ')
+                    : sale.payment_method.replace(/_/g, ' ')}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold text-slate-900">
                   {formatCurrency(sale.total)}

@@ -251,18 +251,29 @@ export async function exportToExcel(opts: ExcelExportOptions): Promise<void> {
 
     // ── KPI Cards (optional) ───────────────────────────────────────────────
     if (sheet.kpis && sheet.kpis.length > 0) {
-      const kpis = sheet.kpis
-      const cardW = Math.max(2, Math.floor(NC / kpis.length))
-      const LABEL_ROW = row
-      const VALUE_ROW = row + 1
+      // Cap visible KPIs to the number of available columns so we never try
+      // to merge cells outside the sheet width (ExcelJS throws on that).
+      const visibleKpis = sheet.kpis.slice(0, NC)
+      const cardW       = Math.max(1, Math.floor(NC / visibleKpis.length))
+      const LABEL_ROW   = row
+      const VALUE_ROW   = row + 1
 
-      kpis.forEach((kpi, ki) => {
+      visibleKpis.forEach((kpi, ki) => {
         const colStart = ki * cardW + 1
-        const colEnd   = Math.min(colStart + cardW - 1, NC)
-        const bg       = ki % 2 === 0 ? C.kpi1 : C.kpi2
+        if (colStart > NC) return  // safety guard — skip out-of-bounds cards
+
+        // Last card stretches to fill any remaining columns
+        const colEnd = ki === visibleKpis.length - 1 ? NC : Math.min(colStart + cardW - 1, NC)
+        const bg     = ki % 2 === 0 ? C.kpi1 : C.kpi2
+
+        // Helper: merge only when the range spans more than one cell
+        // (ExcelJS throws "Cannot merge already merged cells" on single-cell merges)
+        const safemerge = (r: number, cs: number, ce: number) => {
+          if (cs < ce) ws.mergeCells(r, cs, r, ce)
+        }
 
         // Label row
-        ws.mergeCells(LABEL_ROW, colStart, LABEL_ROW, colEnd)
+        safemerge(LABEL_ROW, colStart, colEnd)
         const labelCell = ws.getCell(LABEL_ROW, colStart)
         labelCell.value     = kpi.label.toUpperCase()
         labelCell.font      = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FFBFDBFE' } }
@@ -271,7 +282,7 @@ export async function exportToExcel(opts: ExcelExportOptions): Promise<void> {
         if (ki > 0) labelCell.border = { left: { style: 'medium', color: { argb: C.white } } }
 
         // Value row
-        ws.mergeCells(VALUE_ROW, colStart, VALUE_ROW, colEnd)
+        safemerge(VALUE_ROW, colStart, colEnd)
         const valCell = ws.getCell(VALUE_ROW, colStart)
         valCell.value     = kpi.value
         valCell.font      = { name: 'Calibri', size: 14, bold: true, color: { argb: C.white } }
